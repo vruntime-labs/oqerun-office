@@ -114,6 +114,13 @@ export class Writer {
           <label>Footer <input data-setting="footer" placeholder="Footer text"></label>
           <button data-action="close-layout" type="button">Done</button>
         </section>
+        <footer class="writer-statusbar" aria-label="Document status">
+          <span data-page-status>Page 1 of 1</span>
+          <span data-word-count>Words: 0</span>
+          <span class="writer-status-spacer"></span>
+          <span data-save-status>Ready</span>
+          <span class="writer-zoom">100%</span>
+        </footer>
         <section class="writer-workspace">
           <div class="writer-ruler"></div>
           <article class="writer-page" data-page>
@@ -297,7 +304,11 @@ export class Writer {
       this.setStatus("Unsaved changes");
     });
 
-    editor.addEventListener("input", () => this.setStatus("Unsaved changes"));
+    editor.addEventListener("input", () => {
+      this.setStatus("Unsaved changes");
+      this.updateDocumentStats(editor);
+    });
+    this.updateDocumentStats(editor);
 
     this.root.querySelector('[data-action="save"]')?.addEventListener("click", () => void this.save(editor));
     this.root.querySelector('[data-action="new"]')?.addEventListener("click", () => this.newDocument());
@@ -551,6 +562,15 @@ export class Writer {
   private setStatus(text: string): void {
     const status = this.root.querySelector<HTMLElement>("[data-status]");
     if (status) status.textContent = text;
+    const saveStatus = this.root.querySelector<HTMLElement>("[data-save-status]");
+    if (saveStatus) saveStatus.textContent = text;
+  }
+
+  private updateDocumentStats(editor: HTMLElement): void {
+    const text = editor.innerText.trim();
+    const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    const wordCount = this.root.querySelector<HTMLElement>("[data-word-count]");
+    if (wordCount) wordCount.textContent = `Words: ${words}`;
   }
 
   private slug(value: string): string {
