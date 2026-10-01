@@ -12,23 +12,39 @@ export interface OfficeDocument<TContent = unknown> {
   content: TContent;
 }
 
+export type WriterBlock = {
+  type: "paragraph" | "heading" | "list" | "table" | "image";
+  data: unknown;
+};
+
 export type WriterContent = {
-  blocks: Array<{
-    type: "paragraph" | "heading" | "list" | "table" | "image";
-    data: unknown;
+  html: string;
+  plainText: string;
+  blocks: WriterBlock[];
+};
+
+export type SpreadsheetCell = string | number | boolean | null;
+
+export type SpreadsheetContent = {
+  activeSheet: number;
+  sheets: Array<{
+    name: string;
+    cells: Record<string, SpreadsheetCell>;
   }>;
 };
 
-export type SpreadsheetContent = {
-  sheets: Array<{
-    name: string;
-    cells: Record<string, unknown>;
-  }>;
+export type PresentationElement = {
+  id: string;
+  type: "text" | "image";
+  value: string;
 };
 
 export type PresentationContent = {
+  activeSlide: number;
   slides: Array<{
     id: string;
-    elements: unknown[];
+    title: string;
+    body: string;
+    elements: PresentationElement[];
   }>;
 };
