@@ -1,5 +1,6 @@
 import type { OfficeDocument, WriterBlock, WriterContent } from "../core/DocumentModel";
 import { DocumentStore } from "../core/DocumentStore";
+import { FileMenu } from "../ui/FileMenu";
 
 const EMPTY_HTML = "<h1>Untitled document</h1><p>Start writing with Oqerun Writer.</p><p>Use the toolbar to format your document.</p>";
 
@@ -70,6 +71,7 @@ export class Writer {
         </section>
       </main>`;
     this.bind();
+    this.mountFileMenu();
   }
 
   async openPath(path: string): Promise<void> {
@@ -89,6 +91,80 @@ export class Writer {
     this.setStatus("Opened");
   }
 
+  private mountFileMenu(): void {
+    new FileMenu(this.root, {
+      module: "writer",
+      title: "Oqerun Writer",
+      acceptedTypes: ".oqdoc,.txt",
+      onHome: () => this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
+      onNew: () => {
+        const editor = this.root.querySelector<HTMLElement>(".writer-editor");
+        if (!editor) return;
+        this.documentId = crypto.randomUUID();
+        this.createdAt = new Date().toISOString();
+        this.fileName = "Untitled document";
+        editor.innerHTML = EMPTY_HTML;
+        this.updateFileName();
+        this.setStatus("New document");
+        editor.focus();
+      },
+      onSave: () => {
+        const editor = this.root.querySelector<HTMLElement>(".writer-editor");
+        if (editor) void this.save(editor);
+      },
+      onOpenRecent: (path) => void this.openPath(path),
+      onOpenFile: (file) => void this.importFile(file),
+    }).mount();
+  }
+
+  private async importFile(file: File): Promise<void> {
+    const lower = file.name.toLowerCase();
+    if (lower.endsWith(".oqdoc")) {
+      try {
+        const parsed = JSON.parse(await file.text()) as OfficeDocument<WriterContent>;
+        if (!parsed?.content?.html || !parsed.metadata) throw new Error("Invalid Oqerun document");
+        const path = await this.store.save({
+          ...parsed,
+          metadata: {
+            ...parsed.metadata,
+            path: `/home/user/Documents/${this.slug(parsed.metadata.name)}.oqdoc`,
+          },
+        });
+        this.render();
+        await this.openPath(path);
+      } catch {
+        window.alert("The selected Oqerun document could not be opened.");
+      }
+      return;
+    }
+
+    if (lower.endsWith(".txt")) {
+      const text = await file.text();
+      const name = file.name.replace(/\.txt$/i, "") || "Untitled document";
+      const now = new Date().toISOString();
+      const document: OfficeDocument<WriterContent> = {
+        metadata: {
+          id: crypto.randomUUID(),
+          name,
+          path: `/home/user/Documents/${this.slug(name)}.oqdoc`,
+          mimeType: "application/x-oqerun-document",
+          createdAt: now,
+          modifiedAt: now,
+        },
+        content: {
+          html: "<p>" + this.escape(text).replace(/\r?\n/g, "</p><p>") + "</p>",
+          plainText: text,
+          blocks: [],
+        },
+      };
+      const path = await this.store.save(document);
+      this.render();
+      await this.openPath(path);
+      return;
+    }
+
+    window.alert("Oqerun Writer currently supports .oqdoc and .txt from Open From.");
+  }
   private bind(): void {
     const editor = this.root.querySelector<HTMLElement>(".writer-editor");
     if (!editor) return;
