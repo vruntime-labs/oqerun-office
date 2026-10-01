@@ -42,7 +42,7 @@ export class Sheets {
           <span class="office-command-spacer"></span>
           <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
         </nav>
-        <$1 class="sheet-toolbar">
+        <div class="sheet-toolbar">
           <button data-action="add-sheet" type="button">＋ Sheet</button>
           <button data-action="insert-row" type="button">＋ Row</button>
           <button data-action="insert-column" type="button">＋ Column</button>
