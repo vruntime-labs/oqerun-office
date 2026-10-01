@@ -32,3 +32,5 @@
   .office-file-sidebar button{padding:10px 8px;font-size:12px}
   .office-file-content{padding:30px 18px}
 }
+
+.office-file-menu[hidden]{display:none!important}
