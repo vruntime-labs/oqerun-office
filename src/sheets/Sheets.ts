@@ -138,14 +138,20 @@ export class Sheets {
       this.setStatus("Unsaved changes");
     });
 
-    document.addEventListener("copy", (event) => {
+    const rootWithClipboard = this.root as HTMLElement & {
+      __oqerunSheetsCopy?: (event: ClipboardEvent) => void;
+      __oqerunSheetsPaste?: (event: ClipboardEvent) => void;
+    };
+    if (rootWithClipboard.__oqerunSheetsCopy) document.removeEventListener("copy", rootWithClipboard.__oqerunSheetsCopy);
+    if (rootWithClipboard.__oqerunSheetsPaste) document.removeEventListener("paste", rootWithClipboard.__oqerunSheetsPaste);
+    rootWithClipboard.__oqerunSheetsCopy = (event: ClipboardEvent) => {
       if (!this.root.contains(document.activeElement)) return;
       const input = document.activeElement as HTMLInputElement;
       if (!input.matches?.("[data-cell]")) return;
       event.preventDefault();
       void navigator.clipboard?.writeText(input.value);
-    });
-    document.addEventListener("paste", (event) => {
+    };
+    rootWithClipboard.__oqerunSheetsPaste = (event: ClipboardEvent) => {
       if (!this.root.contains(document.activeElement)) return;
       const input = document.activeElement as HTMLInputElement;
       if (!input.matches?.("[data-cell]")) return;
@@ -153,7 +159,9 @@ export class Sheets {
       if (text == null) return;
       event.preventDefault();
       this.pasteText(text);
-    });
+    };
+    document.addEventListener("copy", rootWithClipboard.__oqerunSheetsCopy);
+    document.addEventListener("paste", rootWithClipboard.__oqerunSheetsPaste);
   }
 
   private renderGrid(focusRef = this.selectedRef): void {
