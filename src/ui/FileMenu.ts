@@ -18,7 +18,6 @@ export class FileMenu {
   private readonly root: HTMLElement;
   private readonly options: FileMenuOptions;
   private panel: HTMLElement | null = null;
-  private keydownHandler: ((event: KeyboardEvent) => void) | null = null;
 
   constructor(root: HTMLElement, options: FileMenuOptions) {
     this.root = root;
@@ -94,8 +93,9 @@ export class FileMenu {
       this.options.onOpenFile(file);
     });
 
-    if (this.keydownHandler) document.removeEventListener("keydown", this.keydownHandler);
-    this.keydownHandler = (event: KeyboardEvent) => {
+    const menuRoot = this.root as HTMLElement & { __oqerunFileMenuKeydown?: (event: KeyboardEvent) => void };
+    if (menuRoot.__oqerunFileMenuKeydown) document.removeEventListener("keydown", menuRoot.__oqerunFileMenuKeydown);
+    menuRoot.__oqerunFileMenuKeydown = (event: KeyboardEvent) => {
       if (event.altKey && event.key.toLowerCase() === "f") {
         event.preventDefault();
         this.setPanelOpen(true);
@@ -116,7 +116,7 @@ export class FileMenu {
       }
       if (event.key === "Escape" && !panel.hidden) this.setPanelOpen(false);
     };
-    document.addEventListener("keydown", this.keydownHandler);
+    document.addEventListener("keydown", menuRoot.__oqerunFileMenuKeydown);
 
     this.showPage("home");
   }
