@@ -779,3 +779,37 @@ button,input,select,textarea{
   min-width:0!important;
   grid-row:5!important;
 }
+
+/* Legacy Writer rules assign named grid areas (top/ribbon/settings/workspace/status).
+   The unified shell must own the Writer grid explicitly; otherwise those names
+   create implicit columns and collapse the canvas to a narrow track. */
+.office-document-host > .writer-app{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:48px 38px 82px minmax(0,1fr) 26px!important;
+  grid-template-areas:
+    "writer-title"
+    "writer-menu"
+    "writer-ribbon"
+    "writer-canvas"
+    "writer-status"!important;
+}
+
+.office-document-host > .writer-app > .writer-topbar{
+  grid-area:writer-title!important;
+}
+
+.office-document-host > .writer-app > .writer-menu-row{
+  grid-area:writer-menu!important;
+}
+
+.office-document-host > .writer-app > .writer-ribbon{
+  grid-area:writer-ribbon!important;
+}
+
+.office-document-host > .writer-app > .writer-canvas{
+  grid-area:writer-canvas!important;
+}
+
+.office-document-host > .writer-app > .writer-statusbar{
+  grid-area:writer-status!important;
+}
