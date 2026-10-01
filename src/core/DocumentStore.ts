@@ -1,8 +1,15 @@
 import type { OfficeDocument } from "./DocumentModel";
 import { LocalStorageVFS, type VFSAdapter } from "../storage/VFSAdapter";
+import { recordRecent, type RecentModule } from "./RecentDocuments";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+
+function moduleForMime(mimeType?: string, path?: string): RecentModule {
+  if (mimeType?.includes("spreadsheet") || path?.endsWith(".oqsheet")) return "sheets";
+  if (mimeType?.includes("presentation") || path?.endsWith(".oqslide")) return "slides";
+  return "writer";
+}
 
 export class DocumentStore {
   constructor(private readonly vfs: VFSAdapter = new LocalStorageVFS()) {}
@@ -14,12 +21,25 @@ export class DocumentStore {
       metadata: { ...document.metadata, path, modifiedAt: new Date().toISOString() },
     };
     await this.vfs.writeFile(path, encoder.encode(JSON.stringify(next)));
+    recordRecent({
+      path,
+      name: next.metadata.name,
+      module: moduleForMime(next.metadata.mimeType, path),
+      modifiedAt: next.metadata.modifiedAt,
+    });
     return path;
   }
 
   async load<T>(path: string): Promise<OfficeDocument<T>> {
     const bytes = await this.vfs.readFile(path);
-    return JSON.parse(decoder.decode(bytes)) as OfficeDocument<T>;
+    const document = JSON.parse(decoder.decode(bytes)) as OfficeDocument<T>;
+    recordRecent({
+      path,
+      name: document.metadata.name,
+      module: moduleForMime(document.metadata.mimeType, path),
+      modifiedAt: document.metadata.modifiedAt,
+    });
+    return document;
   }
 
   async list(path = "/home/user/Documents") {
