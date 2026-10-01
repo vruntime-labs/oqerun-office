@@ -103,13 +103,14 @@ export class FileMenu {
         this.setPanelOpen(true);
         this.showPage("open");
       }
-      if (event.ctrlKey && event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        this.options.onSave();
-      }
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "s") {
         event.preventDefault();
         this.options.onSaveAs();
+        return;
+      }
+      if (event.ctrlKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        this.options.onSave();
       }
       if (event.key === "Escape" && !panel.hidden) this.setPanelOpen(false);
     });
