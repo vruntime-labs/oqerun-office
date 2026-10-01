@@ -753,3 +753,29 @@ button,input,select,textarea{
   width:100%!important;
   min-width:0!important;
 }
+
+/* Writer has two intentionally hidden direct children (the layout settings
+   strip and image picker). Make the hidden state explicit so they never
+   become implicit CSS Grid rows. */
+.office-document-host > .writer-app > [hidden]{
+  display:none!important;
+}
+
+.office-document-host > .writer-app{
+  grid-template-rows:48px 38px 82px minmax(0,1fr) 26px!important;
+  grid-template-columns:minmax(0,1fr)!important;
+}
+
+.office-document-host > .writer-app > .writer-canvas{
+  min-width:0!important;
+  min-height:0!important;
+  width:100%!important;
+  height:auto!important;
+  overflow:auto!important;
+  grid-row:4!important;
+}
+
+.office-document-host > .writer-app > .writer-statusbar{
+  min-width:0!important;
+  grid-row:5!important;
+}
