@@ -41,14 +41,12 @@ export class Writer {
           </div>
           <span class="writer-status" data-status>Ready</span>
         </header>
-        <nav class="office-command-bar" aria-label="Application menu">
-          <button type="button" data-command-menu="file">File</button>
-          <button type="button" data-command-menu="edit">Edit</button>
-          <button type="button" data-command-menu="view">View</button>
-          <button type="button" data-command-menu="insert">Insert</button>
-          <button type="button" data-command-menu="format">Format</button>
-          <button type="button" data-command-menu="tools">Tools</button>
-          <button type="button" data-command-menu="help">Help</button>
+        <nav class="office-ribbon-tabs" aria-label="Ribbon tabs">
+          <button type="button" class="ribbon-tab is-active" data-ribbon-tab="home">Home</button>
+          <button type="button" class="ribbon-tab" data-ribbon-tab="insert">Insert</button>
+          <button type="button" class="ribbon-tab" data-ribbon-tab="layout">Layout</button>
+          <button type="button" class="ribbon-tab" data-ribbon-tab="review">Review</button>
+          <button type="button" class="ribbon-tab" data-ribbon-tab="view">View</button>
           <span class="office-command-spacer"></span>
           <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
         </nav>
@@ -130,6 +128,7 @@ export class Writer {
       </main>`;
     this.applySettings();
     this.bind();
+    this.setupRibbon();
     this.mountFileMenu();
   }
 
@@ -150,6 +149,83 @@ export class Writer {
     this.applySettings();
     this.updateFileName();
     this.setStatus("Opened");
+  }
+
+  private setupRibbon(): void {
+    const toolbar = this.root.querySelector<HTMLElement>(".writer-toolbar");
+    const tabs = Array.from(this.root.querySelectorAll<HTMLButtonElement>("[data-ribbon-tab]"));
+    const groups = Array.from(this.root.querySelectorAll<HTMLElement>(".writer-toolbar .toolbar-group"));
+    const settingsStrip = this.root.querySelector<HTMLElement>("[data-settings-strip]");
+    if (!toolbar || !tabs.length) return;
+
+    const groupDefinitions = [
+      { index: 0, tab: "home", label: "Clipboard" },
+      { index: 1, tab: "home", label: "Font" },
+      { index: 2, tab: "home", label: "Text" },
+      { index: 3, tab: "home", label: "Paragraph" },
+      { index: 4, tab: "home", label: "Alignment" },
+      { index: 5, tab: "review", label: "Find & Replace" },
+      { index: 6, tab: "insert", label: "Insert" },
+      { index: 7, tab: "home", label: "Document" },
+    ] as const;
+
+    groups.forEach((group, index) => {
+      const definition = groupDefinitions[index];
+      if (!definition) return;
+      group.dataset.ribbonTab = definition.tab;
+      group.dataset.ribbonGroup = definition.label;
+    });
+
+    const showTab = (tab: string): void => {
+      tabs.forEach((button) => {
+        const active = button.dataset.ribbonTab === tab;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+
+      groups.forEach((group) => {
+        const visible = group.dataset.ribbonTab === tab;
+        group.hidden = !visible;
+      });
+
+      if (settingsStrip) settingsStrip.hidden = tab !== "layout";
+
+      toolbar.classList.toggle("ribbon-empty", tab === "layout" || tab === "view");
+      toolbar.dataset.activeRibbon = tab;
+
+      toolbar.querySelectorAll<HTMLElement>(".ribbon-empty-state,.ribbon-view-group").forEach((node) => node.remove());
+      if (tab === "layout") {
+        const panel = document.createElement("div");
+        panel.className = "ribbon-empty-state";
+        panel.innerHTML = `<span class="ribbon-empty-icon">▦</span><div><strong>Page Setup</strong><span>Adjust page size, margins, header and footer in the panel below.</span></div>`;
+        toolbar.appendChild(panel);
+      } else if (tab === "view") {
+        const panel = document.createElement("div");
+        panel.className = "ribbon-view-group";
+        panel.innerHTML = `<button type="button" data-view-action="focus">Focus mode</button><button type="button" data-view-action="page-width">Page width</button><button type="button" data-view-action="print-layout">Print layout</button>`;
+        toolbar.appendChild(panel);
+        panel.querySelector('[data-view-action="focus"]')?.addEventListener("click", () => {
+          this.root.querySelector(".writer-shell")?.classList.toggle("writer-focus-mode");
+        });
+        panel.querySelector('[data-view-action="page-width"]')?.addEventListener("click", () => {
+          this.root.querySelector(".writer-page")?.classList.toggle("writer-page-wide");
+        });
+        panel.querySelector('[data-view-action="print-layout"]')?.addEventListener("click", () => {
+          this.root.querySelector(".writer-workspace")?.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
+    };
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => {
+      const name = tab.dataset.ribbonTab ?? "home";
+      if (name === "layout" || name === "view") {
+        showTab(name);
+        return;
+      }
+      showTab(name);
+    }));
+
+    showTab("home");
   }
 
   private mountFileMenu(): void {
