@@ -32,99 +32,150 @@ export class Writer {
 
   render(): void {
     this.root.innerHTML = `
-      <main class="writer-shell">
-        <header class="writer-topbar">
-          <button class="writer-back" data-action="back" type="button">← Oqerun Office</button>
-          <div class="writer-title">
-            <span class="writer-app-icon">W</span>
-            <div><strong>Oqerun Writer</strong><span data-file-name>${this.escape(this.fileName)}</span></div>
+      <main class="writer-app">
+        <header class="writer-titlebar">
+          <div class="writer-titlebar-left">
+            <button class="writer-back" data-action="back" type="button" aria-label="Back to Oqerun Office">←</button>
+            <div class="writer-brand">
+              <span class="writer-logo">W</span>
+              <div class="writer-brand-text">
+                <strong>Oqerun Writer</strong>
+                <span data-file-name>${this.escape(this.fileName)}</span>
+              </div>
+            </div>
           </div>
-          <span class="writer-status" data-status>Ready</span>
+          <div class="writer-quick-actions">
+            <button type="button" data-action="undo" aria-label="Undo">↶</button>
+            <button type="button" data-action="redo" aria-label="Redo">↷</button>
+            <span class="writer-save-state" data-status>Ready</span>
+            <button type="button" class="writer-save-button" data-action="save">Save</button>
+            <button type="button" class="writer-account" aria-label="Account">V</button>
+          </div>
         </header>
-        <nav class="office-ribbon-tabs" aria-label="Ribbon tabs">
-          <button type="button" class="ribbon-tab is-active" data-ribbon-tab="home">Home</button>
-          <button type="button" class="ribbon-tab" data-ribbon-tab="insert">Insert</button>
-          <button type="button" class="ribbon-tab" data-ribbon-tab="layout">Layout</button>
-          <button type="button" class="ribbon-tab" data-ribbon-tab="review">Review</button>
-          <button type="button" class="ribbon-tab" data-ribbon-tab="view">View</button>
-          <span class="office-command-spacer"></span>
-          <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
-        </nav>
-        <div class="writer-toolbar" aria-label="Writer toolbar" aria-label="Writer toolbar">
-          <div class="toolbar-group">
-            <button data-command="undo" type="button">↶</button>
-            <button data-command="redo" type="button">↷</button>
+
+        <div class="writer-menu-row">
+          <button type="button" class="writer-file-button" data-file-menu>File</button>
+          <nav class="writer-tabs" aria-label="Writer tabs">
+            <button type="button" class="writer-tab is-active" data-ribbon-tab="home">Home</button>
+            <button type="button" class="writer-tab" data-ribbon-tab="insert">Insert</button>
+            <button type="button" class="writer-tab" data-ribbon-tab="layout">Layout</button>
+            <button type="button" class="writer-tab" data-ribbon-tab="review">Review</button>
+            <button type="button" class="writer-tab" data-ribbon-tab="view">View</button>
+          </nav>
+          <button type="button" class="writer-search" aria-label="Search commands">⌕ <span>Search</span> <kbd>Ctrl K</kbd></button>
+        </div>
+
+        <section class="writer-ribbon" aria-label="Writer ribbon">
+          <div class="writer-ribbon-scroll">
+            <div class="writer-group" data-ribbon-group="Clipboard" data-ribbon-tab="home">
+              <div class="writer-group-tools writer-clipboard-tools">
+                <button type="button" data-command="undo" title="Undo">↶</button>
+                <button type="button" data-command="redo" title="Redo">↷</button>
+              </div>
+            </div>
+
+            <div class="writer-group writer-font-group" data-ribbon-group="Font" data-ribbon-tab="home">
+              <div class="writer-group-tools writer-font-tools">
+                <select data-command="formatBlock" aria-label="Style">
+                  <option value="p">Normal</option><option value="h1">Title</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option>
+                </select>
+                <select data-command="fontName" aria-label="Font">
+                  <option value="Arial">Arial</option><option value="Calibri">Calibri</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Verdana">Verdana</option>
+                </select>
+                <select data-action="font-size" aria-label="Font size">
+                  <option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18" selected>18</option><option value="24">24</option><option value="32">32</option><option value="48">48</option>
+                </select>
+              </div>
+              <div class="writer-group-tools writer-format-tools">
+                <button type="button" data-command="bold" title="Bold"><b>B</b></button>
+                <button type="button" data-command="italic" title="Italic"><i>I</i></button>
+                <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+                <button type="button" data-command="strikeThrough" title="Strikethrough"><s>S</s></button>
+                <label class="writer-color" title="Text color">A<input data-color="text" type="color" value="#202634"></label>
+                <label class="writer-color" title="Text highlight">H<input data-color="highlight" type="color" value="#fff59d"></label>
+              </div>
+            </div>
+
+            <div class="writer-group" data-ribbon-group="Paragraph" data-ribbon-tab="home">
+              <div class="writer-group-tools">
+                <button type="button" data-command="insertUnorderedList" title="Bulleted list">•</button>
+                <button type="button" data-command="insertOrderedList" title="Numbered list">1.</button>
+                <button type="button" data-command="outdent" title="Decrease indent">⇤</button>
+                <button type="button" data-command="indent" title="Increase indent">⇥</button>
+                <button type="button" data-command="justifyLeft" title="Align left">≡</button>
+                <button type="button" data-command="justifyCenter" title="Center">≣</button>
+                <button type="button" data-command="justifyRight" title="Align right">≡</button>
+                <select data-action="line-spacing" aria-label="Line spacing">
+                  <option value="1">1.0</option><option value="1.15">1.15</option><option value="1.5">1.5</option><option value="1.7" selected>1.7</option><option value="2">2.0</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="writer-group" data-ribbon-group="Editing" data-ribbon-tab="home">
+              <div class="writer-group-tools">
+                <button type="button" data-action="find">Find</button>
+                <button type="button" data-action="replace">Replace</button>
+              </div>
+            </div>
+
+            <div class="writer-group writer-insert-group" data-ribbon-group="Insert" data-ribbon-tab="insert">
+              <div class="writer-group-tools">
+                <button type="button" data-action="link">Link</button>
+                <button type="button" data-action="table">Table</button>
+                <button type="button" data-action="image">Pictures</button>
+                <button type="button" data-action="equation">Equation</button>
+                <button type="button" data-action="layout">Page</button>
+              </div>
+            </div>
+
+            <div class="writer-group" data-ribbon-group="Review" data-ribbon-tab="review">
+              <div class="writer-group-tools">
+                <button type="button" data-action="find">Find</button>
+                <button type="button" data-action="replace">Replace</button>
+              </div>
+            </div>
+
+            <div class="writer-group writer-document-group" data-ribbon-group="Document" data-ribbon-tab="home">
+              <div class="writer-group-tools">
+                <button type="button" data-action="new">New</button>
+                <button type="button" class="writer-ribbon-save" data-action="save">Save</button>
+              </div>
+            </div>
           </div>
-          <div class="toolbar-group">
-            <select data-command="formatBlock" aria-label="Text style">
-              <option value="p">Normal text</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option>
-            </select>
-            <select data-command="fontName" aria-label="Font family">
-              <option value="Arial">Arial</option><option value="Calibri">Calibri</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Verdana">Verdana</option>
-            </select>
-            <select data-action="font-size" aria-label="Font size">
-              <option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18" selected>18</option><option value="24">24</option><option value="32">32</option><option value="48">48</option>
-            </select>
-          </div>
-          <div class="toolbar-group">
-            <button data-command="bold" type="button"><b>B</b></button>
-            <button data-command="italic" type="button"><i>I</i></button>
-            <button data-command="underline" type="button"><u>U</u></button>
-            <button data-command="strikeThrough" type="button"><s>S</s></button>
-            <label class="color-tool" title="Text color">A<input data-color="text" type="color" value="#202634"></label>
-            <label class="color-tool" title="Highlight">H<input data-color="highlight" type="color" value="#fff59d"></label>
-          </div>
-          <div class="toolbar-group">
-            <button data-command="insertUnorderedList" type="button">• List</button>
-            <button data-command="insertOrderedList" type="button">1. List</button>
-            <button data-command="outdent" type="button">⇤</button>
-            <button data-command="indent" type="button">⇥</button>
-          </div>
-          <div class="toolbar-group">
-            <button data-command="justifyLeft" type="button">Left</button>
-            <button data-command="justifyCenter" type="button">Center</button>
-            <button data-command="justifyRight" type="button">Right</button>
-          </div>
-          <div class="toolbar-group">
-            <select data-action="line-spacing" aria-label="Line spacing">
-              <option value="1">1.0</option><option value="1.15">1.15</option><option value="1.5">1.5</option><option value="1.7" selected>1.7</option><option value="2">2.0</option>
-            </select>
-            <button data-action="find" type="button">Find</button>
-            <button data-action="replace" type="button">Replace</button>
-          </div>
-          <div class="toolbar-group">
-            <button data-action="link" type="button">Link</button>
-            <button data-action="table" type="button">Table</button>
-            <button data-action="equation" type="button">∑ Equation</button>
-            <button data-action="image" type="button">Image</button>
-            <button data-action="layout" type="button">Page</button>
-          </div>
-          <div class="toolbar-group toolbar-actions">
-            <button data-action="new" type="button">New</button>
-            <button data-action="save" class="primary-tool" type="button">Save</button>
-            <input data-image-input type="file" accept="image/*" hidden>
-          </div>
-        </nav>
-        <section class="writer-settings-strip" data-settings-strip hidden>
-          <label>Page <select data-setting="pageSize"><option value="A4">A4</option><option value="Letter">Letter</option></select></label>
-          <label>Margins <input data-setting="margin" type="number" min="36" max="180" step="6" value="72"></label>
-          <label>Header <input data-setting="header" placeholder="Header text"></label>
-          <label>Footer <input data-setting="footer" placeholder="Footer text"></label>
-          <button data-action="close-layout" type="button">Done</button>
         </section>
+
+        <section class="writer-layout-strip" data-settings-strip hidden>
+          <div class="writer-layout-controls">
+            <label>Paper <select data-setting="pageSize"><option value="A4">A4</option><option value="Letter">Letter</option></select></label>
+            <label>Margins <input data-setting="margin" type="number" min="36" max="180" step="6" value="72"></label>
+            <label>Header <input data-setting="header" placeholder="Header text"></label>
+            <label>Footer <input data-setting="footer" placeholder="Footer text"></label>
+            <button data-action="close-layout" type="button">Done</button>
+          </div>
+        </section>
+
+        <section class="writer-canvas" aria-label="Document workspace">
+          <div class="writer-ruler" aria-hidden="true">
+            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+          </div>
+          <article class="writer-page" data-page>
+            <div class="writer-page-header" data-page-header></div>
+            <div class="writer-editor" contenteditable="true" spellcheck="true" role="textbox" aria-label="Document editor">${EMPTY_HTML}</div>
+            <div class="writer-page-footer" data-page-footer></div>
+          </article>
+        </section>
+
         <footer class="writer-statusbar" aria-label="Document status">
           <span data-page-status>Page 1 of 1</span>
           <span data-word-count>Words: 0</span>
-          <span class="writer-status-spacer"></span>
+          <span class="writer-status-divider"></span>
           <span data-save-status>Ready</span>
-          <span class="writer-zoom">100%</span>
+          <span class="writer-status-spacer"></span>
+          <span>English</span>
+          <span class="writer-zoom">− &nbsp;100%&nbsp; +</span>
         </footer>
-        <section class="writer-workspace">
-          <div class="writer-ruler"></div>
-          <article class="writer-page" data-page>
-            <div class="writer-editor" contenteditable="true" spellcheck="true" role="textbox" aria-label="Document editor">${EMPTY_HTML}</div>
-          </article>
-        </section>
+
+        <input data-image-input type="file" accept="image/*" hidden>
       </main>`;
     this.applySettings();
     this.bind();
