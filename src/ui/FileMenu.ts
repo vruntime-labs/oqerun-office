@@ -38,11 +38,11 @@ export class FileMenu {
     const panel = document.createElement("section");
     panel.className = "office-file-menu";
     panel.hidden = true;
-    panel.innerHTML = \`
+    panel.innerHTML = `
       <div class="office-file-backdrop" data-file-menu-close></div>
-      <div class="office-file-dialog" role="dialog" aria-label="\${this.escape(this.options.title)} File menu">
+      <div class="office-file-dialog" role="dialog" aria-label="${this.escape(this.options.title)} File menu">
         <aside class="office-file-sidebar">
-          <div class="office-file-sidebar-title">\${this.escape(this.options.title)}</div>
+          <div class="office-file-sidebar-title">${this.escape(this.options.title)}</div>
           <button data-file-action="home" type="button">⌂ Home</button>
           <button data-file-action="new" type="button">＋ New</button>
           <button data-file-action="open" type="button">↥ Open From</button>
@@ -55,13 +55,13 @@ export class FileMenu {
             <div>
               <p class="eyebrow">File</p>
               <h2>Open Recent</h2>
-              <p>Files saved or opened in \${this.escape(this.options.title)} appear here automatically.</p>
+              <p>Files saved or opened in ${this.escape(this.options.title)} appear here automatically.</p>
             </div>
           </div>
           <div class="office-file-recent" data-recent-list></div>
-          <input data-file-menu-input type="file" accept="\${this.escape(this.options.acceptedTypes)}" hidden>
+          <input data-file-menu-input type="file" accept="${this.escape(this.options.acceptedTypes)}" hidden>
         </div>
-      </div>\`;
+      </div>`;
     
     const fileInput = panel.querySelector<HTMLInputElement>("[data-file-menu-input]");
 
@@ -122,27 +122,27 @@ export class FileMenu {
 
     const recent = getRecent().filter((item) => item.module === this.options.module);
     if (!recent.length) {
-      list.innerHTML = \`
+      list.innerHTML = `
         <div class="office-file-empty">
           <strong>No recent files yet</strong>
-          <span>Save or open a \${this.escape(this.options.title)} file and it will appear here.</span>
+          <span>Save or open a ${this.escape(this.options.title)} file and it will appear here.</span>
           <button data-file-action="open-empty" type="button">Open From</button>
-        </div>\`;
+        </div>`;
       list.querySelector('[data-file-action="open-empty"]')?.addEventListener("click", () => {
         panel.querySelector<HTMLInputElement>("[data-file-menu-input]")?.click();
       });
       return;
     }
 
-    list.innerHTML = recent.map((item) => \`
-      <button class="office-recent-file" data-recent-path="\${this.escapeAttribute(item.path)}" type="button">
-        <span class="office-recent-file-icon">\${this.iconFor(item.module)}</span>
+    list.innerHTML = recent.map((item) => `
+      <button class="office-recent-file" data-recent-path="${this.escapeAttribute(item.path)}" type="button">
+        <span class="office-recent-file-icon">${this.iconFor(item.module)}</span>
         <span class="office-recent-file-copy">
-          <strong>\${this.escape(item.name)}</strong>
-          <small>\${new Date(item.modifiedAt).toLocaleString()}</small>
+          <strong>${this.escape(item.name)}</strong>
+          <small>${new Date(item.modifiedAt).toLocaleString()}</small>
         </span>
         <span class="office-recent-arrow">→</span>
-      </button>\`).join("");
+      </button>`).join("");
 
     list.querySelectorAll<HTMLButtonElement>("[data-recent-path]").forEach((recentButton) => {
       recentButton.addEventListener("click", () => {
