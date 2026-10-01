@@ -210,6 +210,16 @@ export class Sheets {
     this.focusCell(focusRef, false);
   }
 
+  private refreshVisibleValues(excludeRef: string): void {
+    this.root.querySelectorAll<HTMLInputElement>("[data-cell]").forEach((cell) => {
+      const ref = cell.dataset.cell ?? "";
+      if (!ref || ref === excludeRef) return;
+      const raw = this.activeSheet().cells[ref];
+      cell.value = raw == null ? "" : String(this.evaluateCell(ref) ?? "");
+    });
+    this.updateFormulaBar(excludeRef);
+  }
+
   public async importFile(file: File): Promise<void> {
     if (file.name.toLowerCase().endsWith(".oqsheet")) {
       try {
