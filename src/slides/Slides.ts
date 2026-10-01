@@ -1,6 +1,6 @@
 import type { OfficeDocument, PresentationContent, PresentationElement, PresentationSlide } from "../core/DocumentModel";
 import { DocumentStore } from "../core/DocumentStore";
-import { exportSlidesPptx, downloadText } from "../core/FormatEngine";
+import { exportSlidesPptx, importSlidesPptx, downloadText } from "../core/FormatEngine";
 import { FileMenu } from "../ui/FileMenu";
 
 export class Slides {
@@ -113,8 +113,27 @@ export class Slides {
   }
 
   public async importFile(file: File): Promise<void> {
+    if (file.name.toLowerCase().endsWith(".pptx")) {
+      try {
+        const imported = await importSlidesPptx(file);
+        this.documentId = crypto.randomUUID();
+        this.createdAt = new Date().toISOString();
+        this.fileName = file.name.replace(/\.pptx$/i, "") || "Untitled presentation";
+        this.state.activeSlide = imported.activeSlide;
+        this.state.slides.splice(0, this.state.slides.length, ...imported.slides);
+        this.selectedElementId = null;
+        this.renderStrip();
+        this.loadActive();
+        await this.save();
+        this.setStatus("Imported PPTX");
+      } catch {
+        window.alert("The selected PPTX file could not be imported.");
+      }
+      return;
+    }
+
     if (!file.name.toLowerCase().endsWith(".oqslide")) {
-      window.alert("Oqerun Slides currently imports .oqslide files. PPTX export is available from Download.");
+      window.alert("Oqerun Slides supports .oqslide and .pptx imports.");
       return;
     }
     try {
