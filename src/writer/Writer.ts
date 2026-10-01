@@ -108,6 +108,9 @@ export class Writer {
         this.setStatus("New document");
         editor.focus();
       },
+      onSaveAs: () => { const editor = this.root.querySelector<HTMLElement>(".writer-editor"); if (editor) void this.saveAs(editor); },
+      onDownload: () => { const editor = this.root.querySelector<HTMLElement>(".writer-editor"); if (editor) this.download(editor); },
+      onPrint: () => window.print(),
       onSave: () => {
         const editor = this.root.querySelector<HTMLElement>(".writer-editor");
         if (editor) void this.save(editor);
@@ -238,6 +241,27 @@ export class Writer {
     this.root.querySelector('[data-action="back"]')?.addEventListener("click", () =>
       this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
     );
+  }
+
+  private async saveAs(editor: HTMLElement): Promise<void> {
+    const value = window.prompt("Save As — document name", this.fileName);
+    if (!value?.trim()) return;
+    this.fileName = value.trim().replace(/\.oqdoc$/i, "");
+    await this.save(editor);
+  }
+
+  private download(editor: HTMLElement): void {
+    const payload = JSON.stringify({
+      metadata: { id: this.documentId, name: this.fileName, createdAt: this.createdAt, modifiedAt: new Date().toISOString() },
+      content: { html: editor.innerHTML, plainText: editor.innerText, blocks: this.blocksFromEditor(editor) }
+    }, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = this.slug(this.fileName) + ".oqdoc";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    this.setStatus("Downloaded");
   }
 
   private async save(editor: HTMLElement): Promise<void> {
