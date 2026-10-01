@@ -5,15 +5,19 @@ export interface RecentDocument {
   name: string;
   module: RecentModule;
   modifiedAt: string;
+  pinned?: boolean;
 }
 
 const KEY = "oqerun-office-recent";
-const LIMIT = 12;
+const LIMIT = 20;
 
 export function recordRecent(document: RecentDocument): void {
   const current = getRecent().filter((item) => item.path !== document.path);
-  current.unshift(document);
-  localStorage.setItem(KEY, JSON.stringify(current.slice(0, LIMIT)));
+  const existing = getRecent().find((item) => item.path === document.path);
+  current.unshift({ ...document, pinned: existing?.pinned ?? document.pinned ?? false });
+  const pinned = current.filter((item) => item.pinned);
+  const normal = current.filter((item) => !item.pinned);
+  localStorage.setItem(KEY, JSON.stringify([...pinned, ...normal].slice(0, LIMIT)));
 }
 
 export function getRecent(): RecentDocument[] {
@@ -33,6 +37,20 @@ export function getRecent(): RecentDocument[] {
   } catch {
     return [];
   }
+}
+
+export function togglePinned(path: string): void {
+  const items = getRecent();
+  const target = items.find((item) => item.path === path);
+  if (!target) return;
+  target.pinned = !target.pinned;
+  const pinned = items.filter((item) => item.pinned);
+  const normal = items.filter((item) => !item.pinned);
+  localStorage.setItem(KEY, JSON.stringify([...pinned, ...normal].slice(0, LIMIT)));
+}
+
+export function removeRecent(path: string): void {
+  localStorage.setItem(KEY, JSON.stringify(getRecent().filter((item) => item.path !== path)));
 }
 
 export function clearRecent(): void {
