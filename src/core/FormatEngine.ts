@@ -212,7 +212,7 @@ function addSlideElement(slide: pptxgen.Slide, element: PresentationElement): vo
       shape: pptxgen.ShapeType.rect,
       x, y, w, h,
       align: "center",
-      valign: "mid",
+      valign: "middle",
       color: "FFFFFF",
       fill: { color: "5D78D6", transparency: 8 },
       line: { color: "5D78D6", width: 1 },
