@@ -304,12 +304,12 @@ export class Writer {
           overlay.remove();
           if (action === "save") { const editor = this.editor(); if (editor) void this.save(editor); return; }
           if (action === "new") { this.newDocument(); return; }
-          if (action === "find") { this.findText(); return; }
-          if (action === "replace") { this.replaceText(); return; }
+          if (action === "find") { this.find(false); return; }
+          if (action === "replace") { this.find(true); return; }
           const editor = this.editor();
           if (editor && ["table","image","equation"].includes(action)) {
             if (action === "table") this.insertTable(editor);
-            if (action === "image") this.pickImage();
+            if (action === "image") this.root.querySelector<HTMLInputElement>("[data-image-input]")?.click();
             if (action === "equation") this.insertEquation(editor);
             return;
           }
