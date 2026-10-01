@@ -17,6 +17,7 @@ import pptxgen from "pptxgenjs";
 import { parse as parsePptx } from "pptxtojson";
 import type {
   PresentationContent,
+  PresentationSlide,
   PresentationElement,
   SpreadsheetCell,
   SpreadsheetContent,
