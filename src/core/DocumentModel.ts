@@ -13,7 +13,7 @@ export interface OfficeDocument<TContent = unknown> {
 }
 
 export type WriterBlock = {
-  type: "paragraph" | "heading" | "list" | "table" | "image";
+  type: "paragraph" | "heading" | "list" | "table" | "image" | "equation";
   data: unknown;
 };
 
@@ -35,16 +35,26 @@ export type SpreadsheetContent = {
 
 export type PresentationElement = {
   id: string;
-  type: "text" | "image";
+  type: "text" | "image" | "shape";
   value: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+};
+
+export type PresentationSlide = {
+  id: string;
+  title: string;
+  body: string;
+  notes: string;
+  theme: "light" | "dark" | "midnight" | "paper";
+  background: string;
+  layout: "title" | "title-body" | "blank";
+  elements: PresentationElement[];
 };
 
 export type PresentationContent = {
   activeSlide: number;
-  slides: Array<{
-    id: string;
-    title: string;
-    body: string;
-    elements: PresentationElement[];
-  }>;
+  slides: PresentationSlide[];
 };
