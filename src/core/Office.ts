@@ -43,7 +43,7 @@ export class Office {
           <div class="office-header-actions">
             <label class="home-open-button">
               <span>Open from</span>
-              <input data-open-file type="file" accept=".oqdoc,.oqsheet,.oqslide,.txt,.csv,.json" hidden>
+              <input data-open-file type="file" accept=".oqdoc,.oqsheet,.oqslide,.docx,.xlsx,.xls,.ods,.pptx,.txt,.csv,.html" hidden>
             </label>
             <div class="office-version">0.3.0</div>
           </div>
@@ -106,13 +106,13 @@ export class Office {
 
   private async openFile(file: File): Promise<void> {
     const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-    const textExtensions = [".txt", ".csv"];
+    const textExtensions = [".txt", ".csv", ".html"];
     let module: OfficeModule | null =
       extension === ".oqsheet" || extension === ".csv" ? "sheets" :
       extension === ".oqslide" ? "slides" :
       "writer";
 
-    if (![".oqdoc", ".oqsheet", ".oqslide", ".txt", ".csv", ".json"].includes(extension)) {
+    if (![".oqdoc", ".oqsheet", ".oqslide", ".docx", ".xlsx", ".xls", ".ods", ".pptx", ".txt", ".csv", ".html"].includes(extension)) {
       window.alert("This file format is not supported by the current import engine yet.");
       return;
     }
@@ -148,8 +148,8 @@ export class Office {
       const document: OfficeDocument<WriterContent> = {
         metadata: {
           id: crypto.randomUUID(),
-          name: file.name.replace(/\.txt$/i, ""),
-          path: `/home/user/Documents/${this.safeName(file.name.replace(/\.txt$/i, ""))}.oqdoc`,
+          name: file.name.replace(/\.(txt|html)$/i, ""),
+          path: `/home/user/Documents/${this.safeName(file.name.replace(/\.(txt|html)$/i, ""))}.oqdoc`,
           mimeType: "application/x-oqerun-document",
           createdAt: new Date().toISOString(),
           modifiedAt: new Date().toISOString(),
