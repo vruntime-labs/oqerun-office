@@ -33,7 +33,7 @@ export class Writer {
   render(): void {
     this.root.innerHTML = `
       <main class="writer-app">
-        <header class="writer-titlebar">
+        <header class="writer-titlebar writer-topbar">
           <div class="writer-titlebar-left">
             <button class="writer-back" data-action="back" type="button" aria-label="Back to Oqerun Office">←</button>
             <div class="writer-brand">
@@ -54,7 +54,6 @@ export class Writer {
         </header>
 
         <div class="writer-menu-row">
-          <button type="button" class="writer-file-button" data-file-menu>File</button>
           <nav class="writer-tabs" aria-label="Writer tabs">
             <button type="button" class="writer-tab is-active" data-ribbon-tab="home">Home</button>
             <button type="button" class="writer-tab" data-ribbon-tab="insert">Insert</button>
