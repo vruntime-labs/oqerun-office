@@ -20,19 +20,24 @@ export class Sheets {
       <main class="sheet-shell">
         <header class="sheet-topbar">
           <button class="writer-back" data-action="back" type="button">← Oqerun Office</button>
-          <div class="sheet-title"><span class="sheet-app-icon">S</span><div><strong>Oqerun Sheets</strong><span>Untitled workbook</span></div></div>
+          <div class="sheet-title"><span class="sheet-app-icon">S</span><div><strong>Oqerun Sheets</strong><span data-file-name>Untitled workbook</span></div></div>
           <span class="sheet-status" data-status>Ready</span>
         </header>
         <div class="sheet-toolbar">
           <button data-action="add-sheet" type="button">＋ Sheet</button>
-          <button data-action="formula" type="button">Formula</button>
+          <button data-action="formula" type="button">ƒx Formula</button>
+          <label class="sheet-open-button">Open from<input data-open-file type="file" accept=".oqsheet,.csv" hidden></label>
           <button data-action="save" class="primary-tool" type="button">Save</button>
+        </div>
+        <div class="sheet-formula-bar">
+          <span class="formula-label">ƒx</span>
+          <input data-formula-bar placeholder="Select a cell or enter a formula such as =SUM(A1:A5)" />
         </div>
         <div class="sheet-tabs" data-tabs></div>
         <section class="sheet-grid-wrap">
           <table class="sheet-grid">
-            <thead><tr><th></th>${Array.from({ length: 10 }, (_, i) => `<th>${this.columnName(i)}</th>`).join("")}</tr></thead>
-            <tbody>${Array.from({ length: 20 }, (_, row) => `<tr><th>${row + 1}</th>${Array.from({ length: 10 }, (_, col) => {
+            <thead><tr><th></th>${Array.from({ length: 12 }, (_, i) => `<th>${this.columnName(i)}</th>`).join("")}</tr></thead>
+            <tbody>${Array.from({ length: 24 }, (_, row) => `<tr><th>${row + 1}</th>${Array.from({ length: 12 }, (_, col) => {
               const ref = this.cellRef(row, col);
               return `<td><input data-cell="${ref}" aria-label="${ref}" /></td>`;
             }).join("")}</tr>`).join("")}</tbody>
@@ -44,13 +49,38 @@ export class Sheets {
     this.loadSheet();
   }
 
+  async openPath(path: string): Promise<void> {
+    const document = await this.store.load<SpreadsheetContent>(path);
+    this.state.activeSheet = document.content.activeSheet;
+    this.state.sheets.splice(0, this.state.sheets.length, ...document.content.sheets);
+    const name = this.root.querySelector<HTMLElement>("[data-file-name]");
+    if (name) name.textContent = document.metadata.name;
+    this.renderTabs();
+    this.loadSheet();
+    this.setStatus("Opened");
+  }
+
   private bind(): void {
+    this.root.querySelectorAll<HTMLInputElement>("[data-cell]").forEach((input) =>
+      input.addEventListener("focus", () => this.updateFormulaBar(input.dataset.cell!)),
+    );
+
     this.root.querySelectorAll<HTMLInputElement>("[data-cell]").forEach((input) =>
       input.addEventListener("input", () => {
         this.activeSheet().cells[input.dataset.cell!] = this.parseValue(input.value);
+        this.updateFormulaBar(input.dataset.cell!);
         this.setStatus("Unsaved changes");
       }),
     );
+
+    this.root.querySelector<HTMLInputElement>("[data-formula-bar]")?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const selected = this.root.querySelector<HTMLInputElement>("[data-cell]:focus");
+      if (!selected) return;
+      selected.value = (event.currentTarget as HTMLInputElement).value;
+      selected.dispatchEvent(new Event("input", { bubbles: true }));
+      selected.blur();
+    });
 
     this.root.querySelector('[data-action="back"]')?.addEventListener("click", () =>
       this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
@@ -65,6 +95,64 @@ export class Sheets {
 
     this.root.querySelector('[data-action="formula"]')?.addEventListener("click", () => this.showFormulaHelp());
     this.root.querySelector('[data-action="save"]')?.addEventListener("click", () => void this.save());
+
+    this.root.querySelector<HTMLInputElement>("[data-open-file]")?.addEventListener("change", (event) => {
+      const file = (event.currentTarget as HTMLInputElement).files?.[0];
+      if (!file) return;
+      void this.importFile(file);
+    });
+  }
+
+  private async importFile(file: File): Promise<void> {
+    if (file.name.toLowerCase().endsWith(".oqsheet")) {
+      const text = await file.text();
+      try {
+        const parsed = JSON.parse(text) as OfficeDocument<SpreadsheetContent>;
+        if (parsed.content?.sheets) {
+          this.state.activeSheet = parsed.content.activeSheet;
+          this.state.sheets.splice(0, this.state.sheets.length, ...parsed.content.sheets);
+          this.renderTabs();
+          this.loadSheet();
+          this.setStatus("Imported workbook");
+        }
+      } catch {
+        this.setStatus("Could not import workbook");
+      }
+      return;
+    }
+
+    const cells: Record<string, SpreadsheetCell> = {};
+    const text = await file.text();
+    text.split(/\r?\n/).forEach((line, row) => {
+      this.parseCsvLine(line).forEach((value, col) => {
+        cells[this.cellRef(row, col)] = this.parseValue(value);
+      });
+    });
+    this.state.activeSheet = 0;
+    this.state.sheets.splice(0, this.state.sheets.length, { name: file.name.replace(/\.csv$/i, ""), cells });
+    this.renderTabs();
+    this.loadSheet();
+    this.setStatus("Imported CSV");
+  }
+
+  private parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = "";
+    let quoted = false;
+    for (let index = 0; index < line.length; index += 1) {
+      const char = line[index];
+      if (char === '"') {
+        if (quoted && line[index + 1] === '"') {
+          current += '"';
+          index += 1;
+        } else quoted = !quoted;
+      } else if (char === "," && !quoted) {
+        result.push(current);
+        current = "";
+      } else current += char;
+    }
+    result.push(current);
+    return result;
   }
 
   private activeSheet(): SheetState {
@@ -79,12 +167,19 @@ export class Sheets {
     this.setStatus(`Editing ${this.activeSheet().name}`);
   }
 
+  private updateFormulaBar(ref: string): void {
+    const bar = this.root.querySelector<HTMLInputElement>("[data-formula-bar]");
+    if (!bar) return;
+    const value = this.activeSheet().cells[ref];
+    bar.value = value === undefined || value === null ? "" : String(value);
+  }
+
   private renderTabs(): void {
     const tabs = this.root.querySelector<HTMLElement>("[data-tabs]");
     if (!tabs) return;
 
     tabs.innerHTML = this.state.sheets
-      .map((sheet, index) => `<button class="sheet-tab ${index === this.state.activeSheet ? "active" : ""}" data-sheet="${index}" type="button">${sheet.name}</button>`)
+      .map((sheet, index) => `<button class="sheet-tab ${index === this.state.activeSheet ? "active" : ""}" data-sheet="${index}" type="button">${this.escape(sheet.name)}</button>`)
       .join("");
 
     tabs.querySelectorAll<HTMLButtonElement>("[data-sheet]").forEach((button) =>
@@ -114,7 +209,9 @@ export class Sheets {
   }
 
   private showFormulaHelp(): void {
-    window.alert("Supported formulas: =A1+10, =A1*2, and =SUM(A1:A5).");
+    window.alert(
+      "Supported formulas:\n=SUM(A1:A5)\n=AVERAGE(A1:A5)\n=MIN(A1:A5)\n=MAX(A1:A5)\n=A1+B1\n=A1*2",
+    );
   }
 
   private parseValue(value: string): SpreadsheetCell {
@@ -126,29 +223,36 @@ export class Sheets {
   }
 
   private evaluateFormula(formula: string): SpreadsheetCell {
-    const sum = formula.match(/^SUM\(([A-Z]+\d+):([A-Z]+\d+)\)$/i);
-    if (sum) {
-      const start = this.refToCoord(sum[1]);
-      const end = this.refToCoord(sum[2]);
-      let total = 0;
+    const range = formula.match(/^(SUM|AVERAGE|MIN|MAX)\(([A-Z]+\d+):([A-Z]+\d+)\)$/i);
+    if (range) {
+      const start = this.refToCoord(range[2]);
+      const end = this.refToCoord(range[3]);
+      const values: number[] = [];
       for (let row = start.row; row <= end.row; row += 1) {
         for (let col = start.col; col <= end.col; col += 1) {
           const value = this.activeSheet().cells[this.cellRef(row, col)];
-          if (typeof value === "number") total += value;
+          if (typeof value === "number") values.push(value);
         }
       }
-      return total;
+      if (!values.length) return 0;
+      if (range[1].toUpperCase() === "AVERAGE") return values.reduce((a, b) => a + b, 0) / values.length;
+      if (range[1].toUpperCase() === "MIN") return Math.min(...values);
+      if (range[1].toUpperCase() === "MAX") return Math.max(...values);
+      return values.reduce((a, b) => a + b, 0);
     }
 
-    const arithmetic = formula.match(/^([A-Z]+\d+)\s*([+*\-/])\s*(-?\d+(?:\.\d+)?)$/i);
-    if (arithmetic) {
-      const left = this.activeSheet().cells[arithmetic[1].toUpperCase()];
-      const right = Number(arithmetic[3]);
-      if (typeof left !== "number") return 0;
-      if (arithmetic[2] === "+") return left + right;
-      if (arithmetic[2] === "-") return left - right;
-      if (arithmetic[2] === "*") return left * right;
-      return right === 0 ? 0 : left / right;
+    const cellArithmetic = formula.match(/^([A-Z]+\d+)\s*([+*\-/])\s*([A-Z]+\d+|[-]?\d+(?:\.\d+)?)$/i);
+    if (cellArithmetic) {
+      const left = this.activeSheet().cells[cellArithmetic[1].toUpperCase()];
+      const rightToken = cellArithmetic[3];
+      const rightValue = /^[A-Z]+\d+$/i.test(rightToken)
+        ? this.activeSheet().cells[rightToken.toUpperCase()]
+        : Number(rightToken);
+      if (typeof left !== "number" || typeof rightValue !== "number") return 0;
+      if (cellArithmetic[2] === "+") return left + rightValue;
+      if (cellArithmetic[2] === "-") return left - rightValue;
+      if (cellArithmetic[2] === "*") return left * rightValue;
+      return rightValue === 0 ? 0 : left / rightValue;
     }
 
     return formula;
@@ -175,6 +279,10 @@ export class Sheets {
       n = Math.floor((n - 1) / 26);
     }
     return result;
+  }
+
+  private escape(value: string): string {
+    return value.replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char] ?? char));
   }
 
   private setStatus(text: string): void {
