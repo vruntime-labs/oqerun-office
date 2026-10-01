@@ -66,12 +66,18 @@ export class FileMenu {
       <input data-file-input type="file" accept="${this.escape(this.options.acceptedTypes)}" hidden>
     `;
 
-    this.root.appendChild(panel);
+    // Keep the Backstage layer outside the editor's layout/stacking context.
+    // This makes File reliably clickable and visible in every module.
+    document.body.appendChild(panel);
     this.panel = panel;
 
     const fileInput = panel.querySelector<HTMLInputElement>("[data-file-input]");
 
-    button.addEventListener("click", () => this.setPanelOpen(!panel.hidden));
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.setPanelOpen(panel.hidden);
+    });
     panel.querySelectorAll("[data-file-close]").forEach((el) =>
       el.addEventListener("click", () => this.setPanelOpen(false)),
     );
@@ -130,6 +136,7 @@ export class FileMenu {
     if (!this.panel) return;
     this.panel.hidden = !open;
     this.panel.style.display = open ? "block" : "none";
+    this.panel.style.pointerEvents = open ? "auto" : "none";
     if (open) this.showPage("home");
   }
 
