@@ -61,7 +61,7 @@ export class Writer {
             <button type="button" class="writer-tab" data-ribbon-tab="review">Review</button>
             <button type="button" class="writer-tab" data-ribbon-tab="view">View</button>
           </nav>
-          <button type="button" class="writer-search" aria-label="Search commands">⌕ <span>Search</span> <kbd>Ctrl K</kbd></button>
+          <button type="button" class="writer-search" data-action="command-search" aria-label="Search commands">⌕ <span>Search</span> <kbd>Ctrl K</kbd></button>
         </div>
 
         <section class="writer-ribbon" aria-label="Writer ribbon">
@@ -271,6 +271,59 @@ export class Writer {
     }).mount();
   }
 
+  private openCommandSearch(): void {
+    const existing = this.root.querySelector(".writer-command-dialog");
+    if (existing) { existing.remove(); return; }
+    const overlay = document.createElement("div");
+    overlay.className = "writer-command-dialog";
+    overlay.innerHTML = `
+      <div class="writer-command-backdrop" data-command-close></div>
+      <div class="writer-command-box" role="dialog" aria-label="Search commands">
+        <input autofocus data-command-query placeholder="Search commands..." />
+        <div data-command-results></div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const commands = [
+      ["Bold", "bold"], ["Italic", "italic"], ["Underline", "underline"],
+      ["Bulleted list", "insertUnorderedList"], ["Numbered list", "insertOrderedList"],
+      ["Align left", "justifyLeft"], ["Center", "justifyCenter"], ["Align right", "justifyRight"],
+      ["Undo", "undo"], ["Redo", "redo"], ["Find", "find"], ["Replace", "replace"],
+      ["Insert table", "table"], ["Insert image", "image"], ["Insert equation", "equation"],
+      ["Save", "save"], ["New document", "new"]
+    ];
+    const query = overlay.querySelector<HTMLInputElement>("[data-command-query]");
+    const results = overlay.querySelector<HTMLElement>("[data-command-results]");
+    const render = () => {
+      const term = (query?.value ?? "").toLowerCase();
+      const filtered = commands.filter(([name]) => name.toLowerCase().includes(term));
+      if (results) results.innerHTML = filtered.map(([name, action]) =>
+        `<button type="button" data-command-result="${action}">${name}</button>`).join("") || "<span>No commands found.</span>";
+      results?.querySelectorAll<HTMLButtonElement>("[data-command-result]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.dataset.commandResult ?? "";
+          overlay.remove();
+          if (action === "save") { const editor = this.editor(); if (editor) void this.save(editor); return; }
+          if (action === "new") { this.newDocument(); return; }
+          if (action === "find") { this.findText(); return; }
+          if (action === "replace") { this.replaceText(); return; }
+          const editor = this.editor();
+          if (editor && ["table","image","equation"].includes(action)) {
+            if (action === "table") this.insertTable(editor);
+            if (action === "image") this.pickImage();
+            if (action === "equation") this.insertEquation(editor);
+            return;
+          }
+          document.execCommand(action, false);
+          this.editor()?.focus();
+          this.setStatus("Unsaved changes");
+        });
+      });
+    };
+    query?.addEventListener("input", render);
+    overlay.querySelector("[data-command-close]")?.addEventListener("click", () => overlay.remove());
+    render();
+  }
+
   private editor(): HTMLElement | null {
     return this.root.querySelector<HTMLElement>(".writer-editor");
   }
@@ -350,6 +403,7 @@ export class Writer {
   }
 
   private bind(): void {
+    this.root.querySelector("[data-action=\"command-search\"]")?.addEventListener("click", () => this.openCommandSearch());
     const editor = this.editor();
     if (!editor) return;
 
