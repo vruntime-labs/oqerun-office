@@ -11,7 +11,7 @@ export class Sheets {
     activeSheet: 0,
     sheets: [{ name: "Sheet 1", cells: {} }],
   };
-  private documentId = crypto.randomUUID();
+  private documentId: string = crypto.randomUUID();
   private createdAt = new Date().toISOString();
   private fileName = "Untitled workbook";
 
