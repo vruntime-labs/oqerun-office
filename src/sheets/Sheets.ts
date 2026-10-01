@@ -169,7 +169,7 @@ export class Sheets {
       rows.push(`<tr data-row="${row + 1}" ${hidden ? 'hidden' : ''}><th>${row + 1}</th>${Array.from({ length: 20 }, (_, col) => {
         const ref = this.cellRef(row, col);
         const raw = this.activeSheet().cells[ref];
-        const value = raw == null ? "" : this.evaluateCell(ref).toString();
+        const value = raw == null ? "" : String(this.evaluateCell(ref) ?? "");
         const format = this.activeSheet().formats?.[ref] ?? {};
         const style = [format.color ? `color:${format.color}` : "", format.background ? `background:${format.background}` : "", format.align ? `text-align:${format.align}` : "", format.bold ? "font-weight:700" : "", format.italic ? "font-style:italic" : ""].filter(Boolean).join(";");
         return `<td><input data-cell="${ref}" value="${this.escapeAttribute(value)}" style="${style}" aria-label="${ref}" /></td>`;
