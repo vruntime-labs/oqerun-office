@@ -14,6 +14,7 @@ import {
   TextRun,
 } from "docx";
 import pptxgen from "pptxgenjs";
+import { parse as parsePptx } from "pptxtojson";
 import type {
   PresentationContent,
   PresentationElement,
@@ -276,6 +277,80 @@ export function importSlidesJson(content: PresentationContent): PresentationCont
       theme: "light",
       background: "#ffffff",
       layout: "title-body",
+      elements: [],
+    }],
+  };
+}
+
+export async function importSlidesPptx(file: File): Promise<PresentationContent> {
+  const parsed = await parsePptx(await file.arrayBuffer(), {
+    imageMode: "base64",
+    videoMode: "none",
+    audioMode: "none",
+  });
+  const width = Number(parsed.size?.width) || 960;
+  const height = Number(parsed.size?.height) || 540;
+  const htmlToText = (value: string): string => {
+    const node = new DOMParser().parseFromString(value || "", "text/html");
+    return node.body.innerText.trim();
+  };
+
+  const slides = (parsed.slides ?? []).map((source: any, index: number) => {
+    const elements: PresentationElement[] = (source.elements ?? []).flatMap((item: any) => {
+      const type = item.type === "image" ? "image" : item.type === "shape" ? "shape" : item.type === "text" ? "text" : null;
+      if (!type) return [];
+      const content = htmlToText(item.content ?? "");
+      const base64 = typeof item.base64 === "string" ? item.base64 : "";
+      const value = type === "image" && base64
+        ? (base64.startsWith("data:") ? base64 : `data:image/png;base64,${base64}`)
+        : content;
+      if (!value && type !== "image") return [];
+      const fill = item.fill?.type === "color" ? item.fill.value : undefined;
+      return [{
+        id: crypto.randomUUID(),
+        type,
+        value,
+        x: Number(item.left ?? 0) / width * 100,
+        y: Number(item.top ?? 0) / height * 100,
+        width: Number(item.width ?? 200) / width * 100,
+        height: Number(item.height ?? 80) / height * 100,
+        rotation: Number(item.rotate ?? 0),
+        fontSize: Number(item.fontSize ?? 18),
+        color: item.color ?? "#182033",
+        background: fill,
+      } satisfies PresentationElement];
+    });
+
+    const titleElement = elements.find((element) => element.type === "text" && element.y !== undefined && element.y < 30);
+    const title = titleElement?.value || `Imported slide ${index + 1}`;
+    const body = elements.filter((element) => element !== titleElement && element.type === "text").map((element) => element.value).join("\n");
+    const background = source.fill?.type === "color" ? source.fill.value : "#ffffff";
+    const theme = background.toLowerCase() === "#ffffff" || background.toLowerCase() === "#fff" ? "light" : "dark";
+
+    return {
+      id: crypto.randomUUID(),
+      title,
+      body,
+      notes: source.note ?? "",
+      theme,
+      background,
+      layout: body ? "title-body" : title ? "title" : "blank",
+      transition: "none",
+      elements,
+    };
+  });
+
+  return {
+    activeSlide: 0,
+    slides: slides.length ? slides : [{
+      id: crypto.randomUUID(),
+      title: "Imported presentation",
+      body: "",
+      notes: "",
+      theme: "light",
+      background: "#ffffff",
+      layout: "blank",
+      transition: "none",
       elements: [],
     }],
   };
