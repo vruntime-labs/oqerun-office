@@ -551,7 +551,7 @@ export class Sheets {
   }
 
   private showFormulaHelp(): void {
-    window.alert("Supported formulas:\n=SUM(A1:A5)\n=AVERAGE(A1:A5)\n=MIN(A1:A5)\n=MAX(A1:A5)\n=COUNT(A1:A5)\n=IF(A1>10,"High","Low")\n=A1+B1*2");
+    window.alert(`Supported formulas:\n=SUM(A1:A5)\n=AVERAGE(A1:A5)\n=MIN(A1:A5)\n=MAX(A1:A5)\n=COUNT(A1:A5)\n=IF(A1>10,"High","Low")\n=A1+B1*2`);
   }
 
   private refToCoord(ref: string): { row: number; col: number } {
