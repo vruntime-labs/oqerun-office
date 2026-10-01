@@ -38,31 +38,36 @@ Editors save structured Oqerun documents through the VFS boundary. The storage p
 ## Current capabilities
 
 ### Writer
-- Rich-text editing
-- Headings, bold, italic and underline
-- Ordered and unordered lists
-- Text alignment
-- Links
-- Table insertion
-- Image insertion
+- Rich-text editing with font family and size controls
+- Bold, italic, underline, strike-through, text color and highlighting
+- Lists, indentation, alignment and line spacing
+- Links, tables, images and equations
+- Find and replace
+- Page size, margins, headers and footers
+- Open Recent, Open From, Save As and Download
+- `.docx` import and standards-based `.docx` export
 - Local draft persistence
 - Structured .oqdoc document model
 - VFS-backed local save
 
 ### Sheets
-- Editable spreadsheet grid
-- Multiple sheets
-- Basic numeric values
-- Basic arithmetic formulas
-- SUM(A1:A5)
+- Editable spreadsheet grid with multiple sheets
+- Formula bar with preserved formulas
+- `SUM`, `AVERAGE`, `MIN`, `MAX`, `COUNT`, `IF` and arithmetic expressions
+- Cell references, ranges and circular-reference detection
+- Copy/paste, row/column insertion, sorting and filtering
+- Cell formatting and quick charts
+- CSV, XLS, XLSX and ODS import/export through SheetJS
 - Local structured workbook save
 
 ### Slides
-- Multiple slides
-- Add, duplicate and delete slides
-- Editable title/body content
-- Slide thumbnails
-- Presentation preview window
+- Multiple slides with layouts and themes
+- Add, duplicate, delete and reorder slides
+- Text boxes, shapes and images
+- Select/edit/resize-position controls for slide elements
+- Speaker notes and slide transitions
+- Full presentation mode with keyboard navigation and fullscreen
+- `.pptx` export
 - Local structured presentation save
 
 ## Planned file support
@@ -76,7 +81,7 @@ XLS, XLSX, ODS, CSV and additional compatible formats where practical.
 ### Slides
 PPT, PPTX, ODP and additional compatible formats where practical.
 
-The current .oqdoc, .oqsheet and .oqslide representations are internal application documents; standards-based import/export is a later format-engine stage.
+The native `.oqdoc`, `.oqsheet` and `.oqslide` representations remain the internal application documents. The current format engine adds browser-side DOCX import/export, spreadsheet standards import/export (XLS/XLSX/ODS/CSV), and PPTX export while keeping the native models as the editing source of truth.
 
 ## Oqerun OS integration
 
@@ -120,9 +125,9 @@ npm run build
 
 ## Project status
 
-The project has moved beyond the placeholder stage. The unified shell, VFS boundary, document store, Writer foundation, functional Sheets workspace and functional Slides workspace are now established.
+The project is now an active office-suite foundation rather than a placeholder. The unified Office shell, Office-style Backstage file workspace, VFS boundary, recent-file tracking, Writer, Sheets and Slides editors are established.
 
-The next major engineering stage is standards-based import/export, beginning with DOCX/XLSX/PPTX while preserving the internal Oqerun document model.
+The current engineering stage focuses on richer editing and standards-based browser-side file exchange while preserving the internal Oqerun document models. Oqerun OS integration remains intentionally separate.
 
 ## License
 
