@@ -11,6 +11,9 @@ export class Sheets {
     activeSheet: 0,
     sheets: [{ name: "Sheet 1", cells: {} }],
   };
+  private documentId = crypto.randomUUID();
+  private createdAt = new Date().toISOString();
+  private fileName = "Untitled workbook";
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -53,6 +56,9 @@ export class Sheets {
 
   async openPath(path: string): Promise<void> {
     const document = await this.store.load<SpreadsheetContent>(path);
+    this.documentId = document.metadata.id;
+    this.createdAt = document.metadata.createdAt;
+    this.fileName = document.metadata.name;
     this.state.activeSheet = document.content.activeSheet;
     this.state.sheets.splice(0, this.state.sheets.length, ...document.content.sheets);
     const name = this.root.querySelector<HTMLElement>("[data-file-name]");
@@ -69,6 +75,9 @@ export class Sheets {
       acceptedTypes: ".oqsheet,.csv",
       onHome: () => this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
       onNew: () => {
+        this.documentId = crypto.randomUUID();
+        this.createdAt = new Date().toISOString();
+        this.fileName = "Untitled workbook";
         this.state.activeSheet = 0;
         this.state.sheets.splice(0, this.state.sheets.length, { name: "Sheet 1", cells: {} });
         this.renderTabs();
@@ -76,6 +85,9 @@ export class Sheets {
         this.setStatus("New workbook");
       },
       onSave: () => void this.save(),
+      onSaveAs: () => void this.saveAs(),
+      onDownload: () => this.download(),
+      onPrint: () => window.print(),
       onOpenRecent: (path) => void this.openPath(path),
       onOpenFile: (file) => void this.importFile(file),
     }).mount();
@@ -211,15 +223,36 @@ export class Sheets {
     );
   }
 
+  private async saveAs(): Promise<void> {
+    const value = window.prompt("Save As — workbook name", this.fileName);
+    if (!value?.trim()) return;
+    this.fileName = value.trim().replace(/\.oqsheet$/i, "");
+    await this.save();
+  }
+
+  private download(): void {
+    const payload = JSON.stringify({
+      metadata: { id: this.documentId, name: this.fileName, createdAt: this.createdAt, modifiedAt: new Date().toISOString() },
+      content: this.state
+    }, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = this.fileName.replace(/[^a-z0-9._-]+/gi, "-") + ".oqsheet";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    this.setStatus("Downloaded");
+  }
+
   private async save(): Promise<void> {
     const now = new Date().toISOString();
     const document: OfficeDocument<SpreadsheetContent> = {
       metadata: {
-        id: "oqerun-sheet-workbook",
-        name: "Untitled workbook",
-        path: "/home/user/Documents/untitled-workbook.oqsheet",
+        id: this.documentId,
+        name: this.fileName,
+        path: `/home/user/Documents/${this.fileName.replace(/[^a-z0-9._-]+/gi, "-")}.oqsheet`,
         mimeType: "application/x-oqerun-spreadsheet",
-        createdAt: now,
+        createdAt: this.createdAt,
         modifiedAt: now,
       },
       content: this.state,
