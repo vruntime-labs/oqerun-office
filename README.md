@@ -12,21 +12,58 @@ The project is designed as one unified application while keeping each editor mod
 
 ## Architecture
 
-Oqerun Office is designed around a storage abstraction so editors do not need to know where a file is stored.
+Oqerun Office separates the application shell, document model and storage provider:
 
 ```text
 Oqerun Office
       |
-      v
-   VFS Adapter
-      |
-  +---+------------------+
-  |                      |
-Local / Oqerun OS    Cloud providers
-                      (Google Drive, future)
+      +-----------------------+
+      |                       |
+   Writer                  Sheets / Slides
+      |                       |
+      +----------+------------+
+                 |
+          Document Store
+                 |
+             VFS Adapter
+                 |
+       +---------+----------+
+       |                    |
+ Local Oqerun VFS       Cloud providers
+                        (future)
 ```
 
-This boundary is intended to let the same Office code run independently on desktop platforms and integrate with Oqerun OS later.
+Editors save structured Oqerun documents through the VFS boundary. The storage provider can therefore change without rewriting the editors.
+
+## Current capabilities
+
+### Writer
+- Rich-text editing
+- Headings, bold, italic and underline
+- Ordered and unordered lists
+- Text alignment
+- Links
+- Table insertion
+- Image insertion
+- Local draft persistence
+- Structured .oqdoc document model
+- VFS-backed local save
+
+### Sheets
+- Editable spreadsheet grid
+- Multiple sheets
+- Basic numeric values
+- Basic arithmetic formulas
+- SUM(A1:A5)
+- Local structured workbook save
+
+### Slides
+- Multiple slides
+- Add, duplicate and delete slides
+- Editable title/body content
+- Slide thumbnails
+- Presentation preview window
+- Local structured presentation save
 
 ## Planned file support
 
@@ -39,6 +76,8 @@ XLS, XLSX, ODS, CSV and additional compatible formats where practical.
 ### Slides
 PPT, PPTX, ODP and additional compatible formats where practical.
 
+The current .oqdoc, .oqsheet and .oqslide representations are internal application documents; standards-based import/export is a later format-engine stage.
+
 ## Oqerun OS integration
 
 Integration is intentionally kept outside the Oqerun OS repository during initial development.
@@ -47,7 +86,7 @@ The future integration surface includes:
 
 - Oqerun VFS
 - application/file associations
-- `.oqpkg` packaging
+- .oqpkg packaging
 - Oqerun Store distribution
 - opening supported office files directly from Oqerun OS
 
@@ -81,7 +120,9 @@ npm run build
 
 ## Project status
 
-The repository is currently at the **early editor stage**. The unified application shell, VFS boundary, file-association model and a functional Writer editing workspace are established. Sheets and Slides are next.
+The project has moved beyond the placeholder stage. The unified shell, VFS boundary, document store, Writer foundation, functional Sheets workspace and functional Slides workspace are now established.
+
+The next major engineering stage is standards-based import/export, beginning with DOCX/XLSX/PPTX while preserving the internal Oqerun document model.
 
 ## License
 
