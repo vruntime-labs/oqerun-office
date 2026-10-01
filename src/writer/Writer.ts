@@ -41,7 +41,18 @@ export class Writer {
           </div>
           <span class="writer-status" data-status>Ready</span>
         </header>
-        <nav class="writer-toolbar" aria-label="Writer toolbar">
+        <nav class="office-command-bar" aria-label="Application menu">
+          <button type="button" data-command-menu="file">File</button>
+          <button type="button" data-command-menu="edit">Edit</button>
+          <button type="button" data-command-menu="view">View</button>
+          <button type="button" data-command-menu="insert">Insert</button>
+          <button type="button" data-command-menu="format">Format</button>
+          <button type="button" data-command-menu="tools">Tools</button>
+          <button type="button" data-command-menu="help">Help</button>
+          <span class="office-command-spacer"></span>
+          <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
+        </nav>
+        <$1 class="writer-toolbar" aria-label="Writer toolbar">
           <div class="toolbar-group">
             <button data-command="undo" type="button">↶</button>
             <button data-command="redo" type="button">↷</button>
