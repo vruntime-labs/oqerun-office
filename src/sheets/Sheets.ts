@@ -185,7 +185,7 @@ export class Sheets {
         this.selectedRef = input.dataset.cell ?? "A1";
         this.activeSheet().cells[this.selectedRef] = this.parseInput(input.value);
         this.updateFormulaBar(this.selectedRef);
-        this.renderGrid(this.selectedRef);
+        this.refreshVisibleValues(this.selectedRef);
         this.setStatus("Unsaved changes");
       });
       input.addEventListener("keydown", (event) => {
