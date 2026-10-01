@@ -31,7 +31,18 @@ export class Sheets {
           <div class="sheet-title"><span class="sheet-app-icon">S</span><div><strong>Oqerun Sheets</strong><span data-file-name>${this.escape(this.fileName)}</span></div></div>
           <span class="sheet-status" data-status>Ready</span>
         </header>
-        <div class="sheet-toolbar">
+        <nav class="office-command-bar" aria-label="Application menu">
+          <button type="button" data-command-menu="file">File</button>
+          <button type="button" data-command-menu="edit">Edit</button>
+          <button type="button" data-command-menu="view">View</button>
+          <button type="button" data-command-menu="insert">Insert</button>
+          <button type="button" data-command-menu="format">Format</button>
+          <button type="button" data-command-menu="tools">Tools</button>
+          <button type="button" data-command-menu="help">Help</button>
+          <span class="office-command-spacer"></span>
+          <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
+        </nav>
+        <$1 class="sheet-toolbar">
           <button data-action="add-sheet" type="button">＋ Sheet</button>
           <button data-action="insert-row" type="button">＋ Row</button>
           <button data-action="insert-column" type="button">＋ Column</button>
