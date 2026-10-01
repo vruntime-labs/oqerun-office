@@ -66,8 +66,7 @@ export class FileMenu {
     const fileInput = panel.querySelector<HTMLInputElement>("[data-file-menu-input]");
 
     button.addEventListener("click", () => {
-      panel.hidden = !panel.hidden;
-      if (!panel.hidden) this.refreshRecent(panel);
+      this.setPanelOpen(panel, panel.hidden);
     });
 
     panel.querySelectorAll("[data-file-menu-close]").forEach((close) =>
@@ -75,17 +74,17 @@ export class FileMenu {
     );
 
     panel.querySelector('[data-file-action="home"]')?.addEventListener("click", () => {
-      panel.hidden = true;
+      this.setPanelOpen(panel, false);
       this.options.onHome();
     });
 
     panel.querySelector('[data-file-action="new"]')?.addEventListener("click", () => {
-      panel.hidden = true;
+      this.setPanelOpen(panel, false);
       this.options.onNew();
     });
 
     panel.querySelector('[data-file-action="save"]')?.addEventListener("click", () => {
-      panel.hidden = true;
+      this.setPanelOpen(panel, false);
       this.options.onSave();
     });
 
@@ -97,7 +96,7 @@ export class FileMenu {
       const file = fileInput.files?.[0];
       fileInput.value = "";
       if (!file) return;
-      panel.hidden = true;
+      this.setPanelOpen(panel, false);
       this.options.onOpenFile(file);
     });
 
@@ -109,11 +108,16 @@ export class FileMenu {
     document.addEventListener("keydown", (event) => {
       if ((event.altKey && event.key.toLowerCase() === "f") || (event.ctrlKey && event.key.toLowerCase() === "o")) {
         event.preventDefault();
-        panel.hidden = false;
-        this.refreshRecent(panel);
+        this.setPanelOpen(panel, true);
       }
-      if (event.key === "Escape" && !panel.hidden) panel.hidden = true;
+      if (event.key === "Escape" && !panel.hidden) this.setPanelOpen(panel, false);
     });
+  }
+
+  private setPanelOpen(panel: HTMLElement, open: boolean): void {
+    panel.hidden = !open;
+    panel.style.display = open ? "block" : "none";
+    if (open) this.refreshRecent(panel);
   }
 
   private refreshRecent(panel: HTMLElement): void {
@@ -148,7 +152,7 @@ export class FileMenu {
       recentButton.addEventListener("click", () => {
         const path = recentButton.dataset.recentPath;
         if (!path) return;
-        panel.hidden = true;
+        this.setPanelOpen(panel, false);
         this.options.onOpenRecent(path);
       });
     });
