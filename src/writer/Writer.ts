@@ -52,7 +52,7 @@ export class Writer {
           <span class="office-command-spacer"></span>
           <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
         </nav>
-        <$1 class="writer-toolbar" aria-label="Writer toolbar">
+        <div class="writer-toolbar" aria-label="Writer toolbar" aria-label="Writer toolbar">
           <div class="toolbar-group">
             <button data-command="undo" type="button">↶</button>
             <button data-command="redo" type="button">↷</button>
