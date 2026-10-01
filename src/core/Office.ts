@@ -6,10 +6,24 @@ import { getRecent, type RecentDocument } from "./RecentDocuments";
 import type { OfficeDocument, SpreadsheetContent, WriterContent } from "./DocumentModel";
 
 export type OfficeModule = "writer" | "sheets" | "slides";
+type EditorInstance = Writer | Sheets | Slides;
+
+interface WorkspaceTab {
+  id: string;
+  module: OfficeModule;
+  name: string;
+  host: HTMLElement;
+  instance: EditorInstance;
+}
 
 export class Office {
   private readonly root: HTMLElement | null;
   private readonly store = new DocumentStore();
+  private readonly tabs = new Map<string, WorkspaceTab>();
+  private activeTabId: string | null = null;
+  private homeHost: HTMLElement | null = null;
+  private workspaceHost: HTMLElement | null = null;
+  private tabStrip: HTMLElement | null = null;
 
   constructor(root: HTMLElement | null) {
     this.root = root;
@@ -18,35 +32,79 @@ export class Office {
   start(): void {
     const root = this.root;
     if (!root) throw new Error("Oqerun Office root element was not found.");
-    this.renderHome();
+
+    root.innerHTML = `
+      <main class="office-app-shell">
+        <header class="office-global-bar">
+          <button class="office-global-brand" data-global-home type="button">
+            <span class="office-global-logo">◈</span>
+            <span><strong>Oqerun Office</strong><small>VRuntime Labs</small></span>
+          </button>
+          <div class="office-global-tabs" data-workspace-tabs>
+            <button class="office-home-tab is-active" data-global-home-tab type="button">Home</button>
+          </div>
+          <div class="office-global-actions">
+            <label class="office-global-open" title="Open file">
+              <span>Open</span>
+              <input data-global-open type="file" accept=".oqdoc,.oqsheet,.oqslide,.docx,.xlsx,.xls,.ods,.pptx,.txt,.csv,.html" hidden>
+            </label>
+            <button type="button" class="office-global-icon" title="Comments">💬</button>
+            <span class="office-presence" title="Workspace presence"><i></i><i></i><b>V</b></span>
+          </div>
+        </header>
+        <section class="office-home-host" data-home-host></section>
+        <section class="office-workspace-host" data-workspace-host hidden></section>
+      </main>`;
+
+    this.homeHost = root.querySelector<HTMLElement>("[data-home-host]");
+    this.workspaceHost = root.querySelector<HTMLElement>("[data-workspace-host]");
+    this.tabStrip = root.querySelector<HTMLElement>("[data-workspace-tabs]");
+
+    root.querySelectorAll("[data-global-home], [data-global-home-tab]").forEach((button) =>
+      button.addEventListener("click", () => this.showHome()),
+    );
+
+    root.querySelector<HTMLInputElement>("[data-global-open]")?.addEventListener("change", (event) => {
+      const input = event.currentTarget as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) void this.openFile(file);
+      input.value = "";
+    });
+
     root.addEventListener("office:navigate", this.handleNavigation);
+    this.renderHome();
   }
 
   private handleNavigation = (event: Event): void => {
     const detail = (event as CustomEvent<string>).detail;
-    if (detail === "home") this.renderHome();
+    if (detail === "home") this.showHome();
   };
 
-  private renderHome(): void {
-    const root = this.root;
-    if (!root) return;
+  private showHome(): void {
+    if (this.homeHost) this.homeHost.hidden = false;
+    if (this.workspaceHost) this.workspaceHost.hidden = true;
+    this.setHomeTabActive(true);
+  }
 
+  private showWorkspace(): void {
+    if (this.homeHost) this.homeHost.hidden = true;
+    if (this.workspaceHost) this.workspaceHost.hidden = false;
+    this.setHomeTabActive(false);
+  }
+
+  private renderHome(): void {
+    const host = this.homeHost;
+    if (!host) return;
     const recent = getRecent();
 
-    root.innerHTML = `
+    host.innerHTML = `
       <main class="office-shell">
         <header class="office-home-topbar">
           <div class="office-home-brand">
             <span class="office-home-logo">◈</span>
             <div><strong>Oqerun Office</strong><span>Open-source productivity suite</span></div>
           </div>
-          <div class="office-home-actions">
-            <label class="home-open-button">
-              <span>Open file</span>
-              <input data-open-file type="file" accept=".oqdoc,.oqsheet,.oqslide,.docx,.xlsx,.xls,.ods,.pptx,.txt,.csv,.html" hidden>
-            </label>
-            <span class="office-version">0.3.0</span>
-          </div>
+          <div class="office-home-actions"><span class="office-version">0.3.0</span></div>
         </header>
         <section class="office-home">
           <div class="office-home-hero">
@@ -75,36 +133,107 @@ export class Office {
         <footer class="office-footer"><span>Open source · MIT License</span><span>VRuntime Labs · Oqerun Office</span></footer>
       </main>`;
 
-    root.querySelectorAll<HTMLButtonElement>("[data-module]").forEach((button) =>
+    host.querySelectorAll<HTMLButtonElement>("[data-module]").forEach((button) =>
       button.addEventListener("click", () => this.openModule(button.dataset.module as OfficeModule)),
     );
 
-    root.querySelectorAll<HTMLButtonElement>("[data-recent-path]").forEach((button) =>
+    host.querySelectorAll<HTMLButtonElement>("[data-recent-path]").forEach((button) =>
       button.addEventListener("click", () => {
         const item = recent.find((entry) => entry.path === button.dataset.recentPath);
         if (item) this.openRecent(item);
       }),
     );
 
-    root.querySelector('[data-action="clear-recent"]')?.addEventListener("click", () => {
+    host.querySelector('[data-action="clear-recent"]')?.addEventListener("click", () => {
       localStorage.removeItem("oqerun-office-recent");
       this.renderHome();
     });
+  }
 
-    root.querySelector<HTMLInputElement>("[data-open-file]")?.addEventListener("change", (event) => {
-      const input = event.currentTarget as HTMLInputElement;
-      const file = input.files?.[0];
-      if (file) void this.openFile(file);
-      input.value = "";
+  private openModule(module: OfficeModule): void {
+    const id = crypto.randomUUID();
+    const name = module === "writer" ? "Untitled document" : module === "sheets" ? "Untitled spreadsheet" : "Untitled presentation";
+    const host = document.createElement("div");
+    host.className = "office-document-host";
+    host.dataset.tabId = id;
+    host.hidden = true;
+    this.workspaceHost?.appendChild(host);
+
+    const instance = module === "writer" ? new Writer(host) : module === "sheets" ? new Sheets(host) : new Slides(host);
+    instance.render();
+
+    this.tabs.set(id, { id, module, name, host, instance });
+    this.activeTabId = id;
+    this.showWorkspace();
+    this.renderWorkspaceTabs();
+    this.activateTab(id);
+  }
+
+  private activateTab(id: string): void {
+    const tab = this.tabs.get(id);
+    if (!tab) return;
+    this.activeTabId = id;
+    this.tabs.forEach((entry) => {
+      entry.host.hidden = entry.id !== id;
     });
+    this.renderWorkspaceTabs();
+    this.showWorkspace();
+  }
+
+  private closeTab(id: string): void {
+    const tab = this.tabs.get(id);
+    if (!tab) return;
+    tab.host.remove();
+    this.tabs.delete(id);
+    if (this.activeTabId === id) {
+      const remaining = Array.from(this.tabs.values());
+      this.activeTabId = remaining.at(-1)?.id ?? null;
+    }
+    if (this.activeTabId) this.activateTab(this.activeTabId);
+    else this.showHome();
+    this.renderWorkspaceTabs();
+  }
+
+  private renderWorkspaceTabs(): void {
+    const strip = this.tabStrip;
+    if (!strip) return;
+
+    strip.innerHTML = `
+      <button class="office-home-tab ${this.activeTabId ? "" : "is-active"}" data-global-home-tab type="button">Home</button>
+      ${Array.from(this.tabs.values()).map((tab) => `
+        <div class="office-document-tab ${tab.id === this.activeTabId ? "is-active" : ""}" data-tab-id="${tab.id}">
+          <button class="office-document-tab-main" type="button">
+            <span class="office-tab-icon">${tab.module === "writer" ? "W" : tab.module === "sheets" ? "S" : "P"}</span>
+            <span class="office-tab-name">${this.escape(tab.name)}</span>
+          </button>
+          <button class="office-document-tab-close" type="button" aria-label="Close document">×</button>
+        </div>
+      `).join("")}
+      <button class="office-new-tab" type="button" title="New document">+</button>`;
+
+    strip.querySelector("[data-global-home-tab]")?.addEventListener("click", () => this.showHome());
+    strip.querySelector(".office-new-tab")?.addEventListener("click", () => this.openModule("writer"));
+
+    strip.querySelectorAll<HTMLElement>(".office-document-tab").forEach((element) => {
+      const id = element.dataset.tabId;
+      if (!id) return;
+      element.querySelector(".office-document-tab-main")?.addEventListener("click", () => this.activateTab(id));
+      element.querySelector(".office-document-tab-close")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.closeTab(id);
+      });
+    });
+  }
+
+  private setHomeTabActive(active: boolean): void {
+    this.tabStrip?.querySelector(".office-home-tab")?.classList.toggle("is-active", active);
   }
 
   private async openFile(file: File): Promise<void> {
     const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
     const module: OfficeModule =
-      extension === ".oqsheet" || extension === ".csv" || extension === ".xlsx" || extension === ".xls" || extension === ".ods" ? "sheets" :
-      extension === ".oqslide" || extension === ".pptx" ? "slides" :
-      "writer";
+      [".oqsheet", ".csv", ".xlsx", ".xls", ".ods"].includes(extension) ? "sheets" :
+      [".oqslide", ".pptx"].includes(extension) ? "slides" : "writer";
 
     const supported = [".oqdoc", ".oqsheet", ".oqslide", ".docx", ".xlsx", ".xls", ".ods", ".pptx", ".txt", ".csv", ".html"];
     if (!supported.includes(extension)) {
@@ -112,20 +241,23 @@ export class Office {
       return;
     }
 
+    const id = crypto.randomUUID();
+    const host = document.createElement("div");
+    host.className = "office-document-host";
+    host.dataset.tabId = id;
+    host.hidden = true;
+    this.workspaceHost?.appendChild(host);
+    const instance = module === "writer" ? new Writer(host) : module === "sheets" ? new Sheets(host) : new Slides(host);
+    instance.render();
+    this.tabs.set(id, { id, module, name: file.name, host, instance });
+    this.activeTabId = id;
+    this.showWorkspace();
+    this.renderWorkspaceTabs();
+    this.activateTab(id);
+
     if ([".docx", ".xlsx", ".xls", ".ods", ".pptx"].includes(extension)) {
-      if (module === "writer") {
-        const editor = new Writer(this.root!);
-        editor.render();
-        await editor.importFile(file);
-      } else if (module === "sheets") {
-        const editor = new Sheets(this.root!);
-        editor.render();
-        await editor.importFile(file);
-      } else {
-        const editor = new Slides(this.root!);
-        editor.render();
-        await editor.importFile(file);
-      }
+      await instance.importFile(file);
+      this.updateTabName(id, file.name);
       return;
     }
 
@@ -133,47 +265,38 @@ export class Office {
 
     if (extension === ".csv") {
       const cells: Record<string, string> = {};
-      text.split(/\r?\n/).forEach((line, row) => {
-        line.split(",").forEach((value, col) => {
-          cells[`${this.columnName(col)}${row + 1}`] = value.trim();
-        });
-      });
+      text.split(/\r?\n/).forEach((line, row) => line.split(",").forEach((value, col) => {
+        cells[`${this.columnName(col)}${row + 1}`] = value.trim();
+      }));
       const document: OfficeDocument<SpreadsheetContent> = {
         metadata: {
-          id: crypto.randomUUID(),
-          name: file.name.replace(/\.csv$/i, ""),
+          id: crypto.randomUUID(), name: file.name.replace(/\.csv$/i, ""),
           path: `/home/user/Documents/${this.safeName(file.name.replace(/\.csv$/i, ""))}.oqsheet`,
-          mimeType: "application/x-oqerun-spreadsheet",
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
+          mimeType: "application/x-oqerun-spreadsheet", createdAt: new Date().toISOString(), modifiedAt: new Date().toISOString(),
         },
         content: { activeSheet: 0, sheets: [{ name: "Sheet 1", cells, formats: {} }] },
       };
       const path = await this.store.save(document);
-      this.openModule("sheets");
-      window.setTimeout(() => void new Sheets(this.root!).openPath(path), 0);
+      await (instance as Sheets).openPath(path);
+      this.updateTabName(id, file.name.replace(/\.csv$/i, ""));
       return;
     }
 
     if (extension === ".txt" || extension === ".html") {
       const document: OfficeDocument<WriterContent> = {
         metadata: {
-          id: crypto.randomUUID(),
-          name: file.name.replace(/\.(txt|html)$/i, ""),
+          id: crypto.randomUUID(), name: file.name.replace(/\.(txt|html)$/i, ""),
           path: `/home/user/Documents/${this.safeName(file.name.replace(/\.(txt|html)$/i, ""))}.oqdoc`,
-          mimeType: "application/x-oqerun-document",
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
+          mimeType: "application/x-oqerun-document", createdAt: new Date().toISOString(), modifiedAt: new Date().toISOString(),
         },
         content: {
           html: extension === ".html" ? text : `<p>${this.escape(text).replace(/\r?\n/g, "</p><p>")}</p>`,
-          plainText: text,
-          blocks: [],
+          plainText: text, blocks: [],
         },
       };
       const path = await this.store.save(document);
-      this.openModule("writer");
-      window.setTimeout(() => void new Writer(this.root!).openPath(path), 0);
+      await (instance as Writer).openPath(path);
+      this.updateTabName(id, file.name.replace(/\.(txt|html)$/i, ""));
       return;
     }
 
@@ -181,39 +304,41 @@ export class Office {
       const parsed = JSON.parse(text) as OfficeDocument;
       if (!parsed?.content || !parsed.metadata) throw new Error("Invalid Office document");
       const path = await this.store.save(parsed);
-      this.openModule(module);
-      window.setTimeout(() => {
-        if (module === "writer") void new Writer(this.root!).openPath(path);
-        else if (module === "sheets") void new Sheets(this.root!).openPath(path);
-        else void new Slides(this.root!).openPath(path);
-      }, 0);
+      await (instance as EditorInstance).openPath(path);
+      this.updateTabName(id, file.name);
     } catch {
       window.alert("The selected Oqerun Office file could not be read.");
     }
   }
 
   private openRecent(item: RecentDocument): void {
-    this.openModule(item.module);
-    window.setTimeout(() => {
-      if (item.module === "writer") void new Writer(this.root!).openPath(item.path);
-      else if (item.module === "sheets") void new Sheets(this.root!).openPath(item.path);
-      else void new Slides(this.root!).openPath(item.path);
-    }, 0);
+    const id = crypto.randomUUID();
+    const host = document.createElement("div");
+    host.className = "office-document-host";
+    host.dataset.tabId = id;
+    host.hidden = true;
+    this.workspaceHost?.appendChild(host);
+    const instance = item.module === "writer" ? new Writer(host) : item.module === "sheets" ? new Sheets(host) : new Slides(host);
+    instance.render();
+    this.tabs.set(id, { id, module: item.module, name: item.name, host, instance });
+    this.activeTabId = id;
+    this.showWorkspace();
+    this.renderWorkspaceTabs();
+    this.activateTab(id);
+    void instance.openPath(item.path);
   }
 
-  private openModule(module: OfficeModule): void {
-    if (module === "writer") new Writer(this.root!).render();
-    else if (module === "sheets") new Sheets(this.root!).render();
-    else new Slides(this.root!).render();
+  private updateTabName(id: string, name: string): void {
+    const tab = this.tabs.get(id);
+    if (!tab) return;
+    tab.name = name;
+    this.renderWorkspaceTabs();
   }
 
   private moduleCard(module: OfficeModule, title: string, description: string, glyph: string): string {
     return `<button class="module-card" data-module="${module}" type="button">
       <span class="module-icon">${glyph}</span>
-      <span class="module-content">
-        <strong>Oqerun ${title}</strong>
-        <span>${description}</span>
-      </span>
+      <span class="module-content"><strong>Oqerun ${title}</strong><span>${description}</span></span>
       <span class="module-arrow">→</span>
     </button>`;
   }
