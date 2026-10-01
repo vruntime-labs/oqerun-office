@@ -35,49 +35,44 @@ export class Office {
 
     root.innerHTML = `
       <main class="office-shell">
-        <header class="office-header">
-          <div>
-            <div class="office-brand">Oqerun Office</div>
-            <div class="office-subtitle">Office Suite</div>
+        <header class="office-home-topbar">
+          <div class="office-home-brand">
+            <span class="office-home-logo">◈</span>
+            <div><strong>Oqerun Office</strong><span>Open-source productivity suite</span></div>
           </div>
-          <div class="office-header-actions">
+          <div class="office-home-actions">
             <label class="home-open-button">
-              <span>Open from</span>
+              <span>Open file</span>
               <input data-open-file type="file" accept=".oqdoc,.oqsheet,.oqslide,.docx,.xlsx,.xls,.ods,.pptx,.txt,.csv,.html" hidden>
             </label>
-            <div class="office-version">0.3.0</div>
+            <span class="office-version">0.3.0</span>
           </div>
         </header>
-
-        <section class="office-welcome">
-          <p class="eyebrow">VRuntime Labs</p>
-          <h1>One suite. Three workspaces.</h1>
-          <p class="welcome-copy">Create documents, spreadsheets and presentations from one unified Oqerun application.</p>
-
-          <div class="module-grid">
-            ${this.moduleCard("writer", "Writer", "Documents, rich text, tables, images and equations.", "W")}
-            ${this.moduleCard("sheets", "Sheets", "Spreadsheets, formulas, tables and multiple sheets.", "S")}
-            ${this.moduleCard("slides", "Slides", "Presentations, layouts, themes, images and shapes.", "P")}
-          </div>
-
-          <section class="recent-section">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">Workspace</p>
-                <h2>Open recent</h2>
-              </div>
-              ${recent.length ? '<button data-action="clear-recent" class="text-button" type="button">Clear</button>' : ""}
+        <section class="office-home">
+          <div class="office-home-hero">
+            <div>
+              <p class="eyebrow">VRuntime Labs</p>
+              <h1>Everything you need to create.</h1>
+              <p>Documents, spreadsheets and presentations in one focused workspace — designed for Oqerun OS and built in the open.</p>
             </div>
-            <div class="recent-list">
-              ${recent.length ? recent.map((item) => this.recentCard(item)).join("") : '<div class="empty-recent">Your recently saved documents will appear here.</div>'}
+            <div class="office-home-orbit" aria-hidden="true"><span>W</span><span>S</span><span>P</span></div>
+          </div>
+          <div class="office-module-grid">
+            ${this.moduleCard("writer", "Writer", "Write, format and publish polished documents.", "W")}
+            ${this.moduleCard("sheets", "Sheets", "Calculate, analyze and visualize your data.", "S")}
+            ${this.moduleCard("slides", "Slides", "Build presentations with layouts, themes and media.", "P")}
+          </div>
+          <section class="office-recent-section">
+            <div class="office-section-heading">
+              <div><p class="eyebrow">Your workspace</p><h2>Recent files</h2></div>
+              ${recent.length ? '<button data-action="clear-recent" class="text-button" type="button">Clear history</button>' : ""}
+            </div>
+            <div class="office-recent-grid">
+              ${recent.length ? recent.map((item) => this.recentCard(item)).join("") : '<div class="office-empty-state"><strong>No recent files yet</strong><span>Create a document, workbook or presentation and it will appear here.</span></div>'}
             </div>
           </section>
         </section>
-
-        <footer class="office-footer">
-          <span>Open source • Designed for Oqerun OS</span>
-          <span>VRuntime Labs</span>
-        </footer>
+        <footer class="office-footer"><span>Open source · MIT License</span><span>VRuntime Labs · Oqerun Office</span></footer>
       </main>`;
 
     root.querySelectorAll<HTMLButtonElement>("[data-module]").forEach((button) =>
