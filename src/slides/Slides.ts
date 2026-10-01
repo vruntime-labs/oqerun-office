@@ -36,7 +36,7 @@ export class Slides {
           <span class="office-command-spacer"></span>
           <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
         </nav>
-        <$1 class="slides-toolbar">
+        <div class="slides-toolbar">
           <button data-action="add" type="button">＋ Slide</button>
           <button data-action="duplicate" type="button">Duplicate</button>
           <button data-action="delete" type="button">Delete</button>
