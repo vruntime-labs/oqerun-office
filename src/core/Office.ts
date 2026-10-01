@@ -106,45 +106,61 @@ export class Office {
 
   private async openFile(file: File): Promise<void> {
     const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-    const textExtensions = [".txt", ".csv", ".html"];
-    let module: OfficeModule | null =
-      extension === ".oqsheet" || extension === ".csv" ? "sheets" :
-      extension === ".oqslide" ? "slides" :
+    const module: OfficeModule =
+      extension === ".oqsheet" || extension === ".csv" || extension === ".xlsx" || extension === ".xls" || extension === ".ods" ? "sheets" :
+      extension === ".oqslide" || extension === ".pptx" ? "slides" :
       "writer";
 
-    if (![".oqdoc", ".oqsheet", ".oqslide", ".docx", ".xlsx", ".xls", ".ods", ".pptx", ".txt", ".csv", ".html"].includes(extension)) {
+    const supported = [".oqdoc", ".oqsheet", ".oqslide", ".docx", ".xlsx", ".xls", ".ods", ".pptx", ".txt", ".csv", ".html"];
+    if (!supported.includes(extension)) {
       window.alert("This file format is not supported by the current import engine yet.");
       return;
     }
 
-    const store = this.store;
+    if ([".docx", ".xlsx", ".xls", ".ods", ".pptx"].includes(extension)) {
+      if (module === "writer") {
+        const editor = new Writer(this.root!);
+        editor.render();
+        await editor.importFile(file);
+      } else if (module === "sheets") {
+        const editor = new Sheets(this.root!);
+        editor.render();
+        await editor.importFile(file);
+      } else {
+        const editor = new Slides(this.root!);
+        editor.render();
+        await editor.importFile(file);
+      }
+      return;
+    }
+
     const text = await file.text();
 
-    if (textExtensions.includes(extension)) {
-      if (extension === ".csv") {
-        const cells: Record<string, string> = {};
-        text.split(/\r?\n/).forEach((line, row) => {
-          line.split(",").forEach((value, col) => {
-            cells[`${this.columnName(col)}${row + 1}`] = value.trim();
-          });
+    if (extension === ".csv") {
+      const cells: Record<string, string> = {};
+      text.split(/\r?\n/).forEach((line, row) => {
+        line.split(",").forEach((value, col) => {
+          cells[`${this.columnName(col)}${row + 1}`] = value.trim();
         });
-        const document: OfficeDocument<SpreadsheetContent> = {
-          metadata: {
-            id: crypto.randomUUID(),
-            name: file.name.replace(/\.csv$/i, ""),
-            path: `/home/user/Documents/${this.safeName(file.name.replace(/\.csv$/i, ""))}.oqsheet`,
-            mimeType: "application/x-oqerun-spreadsheet",
-            createdAt: new Date().toISOString(),
-            modifiedAt: new Date().toISOString(),
-          },
-          content: { activeSheet: 0, sheets: [{ name: "Sheet 1", cells }] },
-        };
-        const path = await store.save(document);
-        this.openModule("sheets");
-        window.setTimeout(() => void new Sheets(this.root!).openPath(path), 0);
-        return;
-      }
+      });
+      const document: OfficeDocument<SpreadsheetContent> = {
+        metadata: {
+          id: crypto.randomUUID(),
+          name: file.name.replace(/\.csv$/i, ""),
+          path: `/home/user/Documents/${this.safeName(file.name.replace(/\.csv$/i, ""))}.oqsheet`,
+          mimeType: "application/x-oqerun-spreadsheet",
+          createdAt: new Date().toISOString(),
+          modifiedAt: new Date().toISOString(),
+        },
+        content: { activeSheet: 0, sheets: [{ name: "Sheet 1", cells, formats: {} }] },
+      };
+      const path = await this.store.save(document);
+      this.openModule("sheets");
+      window.setTimeout(() => void new Sheets(this.root!).openPath(path), 0);
+      return;
+    }
 
+    if (extension === ".txt" || extension === ".html") {
       const document: OfficeDocument<WriterContent> = {
         metadata: {
           id: crypto.randomUUID(),
@@ -154,9 +170,13 @@ export class Office {
           createdAt: new Date().toISOString(),
           modifiedAt: new Date().toISOString(),
         },
-        content: { html: `<p>${this.escape(text).replace(/\r?\n/g, "</p><p>")}</p>`, plainText: text, blocks: [] },
+        content: {
+          html: extension === ".html" ? text : `<p>${this.escape(text).replace(/\r?\n/g, "</p><p>")}</p>`,
+          plainText: text,
+          blocks: [],
+        },
       };
-      const path = await store.save(document);
+      const path = await this.store.save(document);
       this.openModule("writer");
       window.setTimeout(() => void new Writer(this.root!).openPath(path), 0);
       return;
@@ -164,18 +184,16 @@ export class Office {
 
     try {
       const parsed = JSON.parse(text) as OfficeDocument;
-      if (parsed?.metadata?.path && parsed?.content) {
-        const path = await store.save(parsed);
-        module = extension === ".oqsheet" ? "sheets" : extension === ".oqslide" ? "slides" : "writer";
-        this.openModule(module);
-        window.setTimeout(() => {
-          if (module === "writer") void new Writer(this.root!).openPath(path);
-          else if (module === "sheets") void new Sheets(this.root!).openPath(path);
-          else void new Slides(this.root!).openPath(path);
-        }, 0);
-      }
+      if (!parsed?.content || !parsed.metadata) throw new Error("Invalid Office document");
+      const path = await this.store.save(parsed);
+      this.openModule(module);
+      window.setTimeout(() => {
+        if (module === "writer") void new Writer(this.root!).openPath(path);
+        else if (module === "sheets") void new Sheets(this.root!).openPath(path);
+        else void new Slides(this.root!).openPath(path);
+      }, 0);
     } catch {
-      window.alert("The selected Office file could not be read.");
+      window.alert("The selected Oqerun Office file could not be read.");
     }
   }
 
