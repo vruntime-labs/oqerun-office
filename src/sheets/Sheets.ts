@@ -258,6 +258,8 @@ export class Sheets {
       content: this.state,
     };
     await this.store.save(document);
+    const name = this.root.querySelector<HTMLElement>("[data-file-name]");
+    if (name) name.textContent = this.fileName;
     this.setStatus("Saved locally");
   }
 
