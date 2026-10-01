@@ -17,20 +17,49 @@ export type WriterBlock = {
   data: unknown;
 };
 
+export type WriterSettings = {
+  fontFamily: string;
+  fontSize: number;
+  textColor: string;
+  highlightColor: string;
+  lineSpacing: number;
+  indent: number;
+  pageSize: "A4" | "Letter";
+  margin: number;
+  header: string;
+  footer: string;
+};
+
 export type WriterContent = {
   html: string;
   plainText: string;
   blocks: WriterBlock[];
+  settings?: WriterSettings;
 };
 
 export type SpreadsheetCell = string | number | boolean | null;
 
+export type SpreadsheetFormatting = {
+  bold?: boolean;
+  italic?: boolean;
+  color?: string;
+  background?: string;
+  align?: "left" | "center" | "right";
+};
+
+export type SpreadsheetSheet = {
+  name: string;
+  cells: Record<string, SpreadsheetCell>;
+  formats?: Record<string, SpreadsheetFormatting>;
+  columnWidths?: Record<string, number>;
+  rowHeights?: Record<string, number>;
+  frozenRows?: number;
+  frozenColumns?: number;
+};
+
 export type SpreadsheetContent = {
   activeSheet: number;
-  sheets: Array<{
-    name: string;
-    cells: Record<string, SpreadsheetCell>;
-  }>;
+  sheets: SpreadsheetSheet[];
 };
 
 export type PresentationElement = {
@@ -41,6 +70,10 @@ export type PresentationElement = {
   y?: number;
   width?: number;
   height?: number;
+  rotation?: number;
+  fontSize?: number;
+  color?: string;
+  background?: string;
 };
 
 export type PresentationSlide = {
@@ -52,6 +85,7 @@ export type PresentationSlide = {
   background: string;
   layout: "title" | "title-body" | "blank";
   elements: PresentationElement[];
+  transition?: "none" | "fade" | "slide" | "zoom";
 };
 
 export type PresentationContent = {
