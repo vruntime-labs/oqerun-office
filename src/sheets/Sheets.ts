@@ -1,5 +1,6 @@
 import type { OfficeDocument, SpreadsheetCell, SpreadsheetContent } from "../core/DocumentModel";
 import { DocumentStore } from "../core/DocumentStore";
+import { FileMenu } from "../ui/FileMenu";
 
 type SheetState = { name: string; cells: Record<string, SpreadsheetCell> };
 
@@ -47,6 +48,7 @@ export class Sheets {
     this.bind();
     this.renderTabs();
     this.loadSheet();
+    this.mountFileMenu();
   }
 
   async openPath(path: string): Promise<void> {
@@ -60,6 +62,24 @@ export class Sheets {
     this.setStatus("Opened");
   }
 
+  private mountFileMenu(): void {
+    new FileMenu(this.root, {
+      module: "sheets",
+      title: "Oqerun Sheets",
+      acceptedTypes: ".oqsheet,.csv",
+      onHome: () => this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
+      onNew: () => {
+        this.state.activeSheet = 0;
+        this.state.sheets.splice(0, this.state.sheets.length, { name: "Sheet 1", cells: {} });
+        this.renderTabs();
+        this.loadSheet();
+        this.setStatus("New workbook");
+      },
+      onSave: () => void this.save(),
+      onOpenRecent: (path) => void this.openPath(path),
+      onOpenFile: (file) => void this.importFile(file),
+    }).mount();
+  }
   private bind(): void {
     this.root.querySelectorAll<HTMLInputElement>("[data-cell]").forEach((input) =>
       input.addEventListener("focus", () => this.updateFormulaBar(input.dataset.cell!)),
