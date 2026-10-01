@@ -477,3 +477,23 @@ body {
   .writer-toolbar{height:78px!important;min-height:78px!important;max-height:78px!important}
   .writer-toolbar .toolbar-group{height:66px;min-height:66px!important}
 }
+
+
+/* Final Writer shell grid: document workspace stays above the status bar. */
+.writer-shell{
+  grid-template-rows:58px 40px 88px auto minmax(0,1fr) 28px!important;
+  grid-template-areas:
+    "top"
+    "tabs"
+    "ribbon"
+    "settings"
+    "workspace"
+    "status";
+}
+.writer-topbar{grid-area:top}
+.office-ribbon-tabs{grid-area:tabs}
+.writer-toolbar{grid-area:ribbon}
+.writer-settings-strip{grid-area:settings}
+.writer-workspace{grid-area:workspace}
+.writer-statusbar{grid-area:status}
+.writer-settings-strip[hidden]{display:none!important}
