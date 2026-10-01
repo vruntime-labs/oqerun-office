@@ -21,9 +21,9 @@ export class Writer {
           <button class="writer-back" data-action="back" type="button">← Oqerun Office</button>
           <div class="writer-title">
             <span class="writer-app-icon">W</span>
-            <div><strong>Oqerun Writer</strong><span data-file-name>${this.fileName}</span></div>
+            <div><strong>Oqerun Writer</strong><span data-file-name>${this.escape(this.fileName)}</span></div>
           </div>
-          <div class="writer-status" data-status>Ready</div>
+          <span class="writer-status" data-status>Ready</span>
         </header>
         <nav class="writer-toolbar" aria-label="Writer toolbar">
           <div class="toolbar-group">
@@ -39,6 +39,7 @@ export class Writer {
             <button data-command="bold" type="button"><b>B</b></button>
             <button data-command="italic" type="button"><i>I</i></button>
             <button data-command="underline" type="button"><u>U</u></button>
+            <button data-command="strikeThrough" type="button"><s>S</s></button>
           </div>
           <div class="toolbar-group">
             <button data-command="insertUnorderedList" type="button">• List</button>
@@ -52,6 +53,7 @@ export class Writer {
           <div class="toolbar-group">
             <button data-action="link" type="button">Link</button>
             <button data-action="table" type="button">Table</button>
+            <button data-action="equation" type="button">∑ Equation</button>
             <button data-action="image" type="button">Image</button>
           </div>
           <div class="toolbar-group toolbar-actions">
@@ -68,6 +70,23 @@ export class Writer {
         </section>
       </main>`;
     this.bind();
+  }
+
+  async openPath(path: string): Promise<void> {
+    const document = await this.store.load<WriterContent>(path);
+    this.documentId = document.metadata.id;
+    this.createdAt = document.metadata.createdAt;
+    this.fileName = document.metadata.name;
+
+    const editor = this.root.querySelector<HTMLElement>(".writer-editor");
+    if (!editor) {
+      this.render();
+      return this.openPath(path);
+    }
+
+    editor.innerHTML = document.content.html || EMPTY_HTML;
+    this.updateFileName();
+    this.setStatus("Opened");
   }
 
   private bind(): void {
@@ -113,6 +132,7 @@ export class Writer {
     });
 
     this.root.querySelector('[data-action="table"]')?.addEventListener("click", () => this.insertTable(editor));
+    this.root.querySelector('[data-action="equation"]')?.addEventListener("click", () => this.insertEquation(editor));
 
     const imageInput = this.root.querySelector<HTMLInputElement>("[data-image-input]");
     this.root.querySelector('[data-action="image"]')?.addEventListener("click", () => imageInput?.click());
@@ -176,6 +196,7 @@ export class Writer {
       if (tag === "ul" || tag === "ol") return { type: "list", data: { ordered: tag === "ol", html: node.outerHTML } };
       if (tag === "table") return { type: "table", data: { html: node.outerHTML } };
       if (tag === "img") return { type: "image", data: { src: (node as HTMLImageElement).src, alt: (node as HTMLImageElement).alt } };
+      if (node.classList.contains("writer-equation")) return { type: "equation", data: { value: node.textContent ?? "" } };
       return { type: "paragraph", data: { html: node.innerHTML, text: node.textContent ?? "" } };
     });
   }
@@ -193,6 +214,29 @@ export class Writer {
     document.execCommand("insertHTML", false, html);
     editor.focus();
     this.setStatus("Unsaved changes");
+  }
+
+  private insertEquation(editor: HTMLElement): void {
+    const choice = window.prompt(
+      "Equation template:\n1. Quadratic formula\n2. Pythagorean theorem\n3. Summation\n4. Integral\n5. Custom",
+      "1",
+    );
+
+    const templates: Record<string, string> = {
+      "1": "x = (−b ± √(b² − 4ac)) / 2a",
+      "2": "a² + b² = c²",
+      "3": "Σᵢ₌₁ⁿ i = n(n + 1) / 2",
+      "4": "∫₀¹ x² dx = 1/3",
+    };
+
+    const value = choice === "5"
+      ? window.prompt("Enter your equation", "E = mc²") ?? ""
+      : templates[choice ?? "1"] ?? templates["1"];
+
+    if (!value) return;
+    document.execCommand("insertHTML", false, `<div class="writer-equation" contenteditable="false">${this.escape(value)}</div><p></p>`);
+    editor.focus();
+    this.setStatus("Equation inserted");
   }
 
   private updateFileName(): void {
