@@ -81,7 +81,7 @@ npm run build
 
 ## Project status
 
-The repository is currently at the **foundation stage**. The application shell and VFS boundary are established; the Writer, Sheets and Slides editing engines will be built on top of this foundation.
+The repository is currently at the **early editor stage**. The unified application shell, VFS boundary, file-association model and a functional Writer editing workspace are established. Sheets and Slides are next.
 
 ## License
 
