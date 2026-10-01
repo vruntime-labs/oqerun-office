@@ -105,6 +105,12 @@ export async function exportWriterDocx(content: WriterContent, fileName: string)
 
   const doc = new Document({
     creator: "VRuntime Labs",
+    numbering: {
+      config: [{
+        reference: "oqerun-numbering",
+        levels: [{ level: 0, format: "decimal", text: "%1.", alignment: "left" }],
+      }],
+    },
     title: fileName,
     sections: [{
       headers: header ? { default: header } : undefined,
