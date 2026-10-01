@@ -26,16 +26,18 @@ export class FileMenu {
 
   mount(): void {
     const topbar = this.root.querySelector<HTMLElement>(".writer-topbar, .sheet-topbar, .slides-topbar");
+    const fileHost = this.root.querySelector<HTMLElement>(".writer-menu-row") ?? topbar;
     if (!topbar) return;
 
     topbar.querySelector("[data-file-menu-button]")?.remove();
+    fileHost?.querySelector("[data-file-menu-button]")?.remove();
 
     const button = document.createElement("button");
     button.className = "office-file-button";
     button.type = "button";
     button.dataset.fileMenuButton = "true";
     button.textContent = "File";
-    topbar.insertBefore(button, topbar.firstChild);
+    fileHost?.insertBefore(button, fileHost.firstChild);
 
     const panel = document.createElement("section");
     panel.className = "office-file-menu";
