@@ -112,7 +112,7 @@ export class Slides {
     }).mount();
   }
 
-  private async importFile(file: File): Promise<void> {
+  public async importFile(file: File): Promise<void> {
     if (!file.name.toLowerCase().endsWith(".oqslide")) {
       window.alert("Oqerun Slides currently imports .oqslide files. PPTX export is available from Download.");
       return;
