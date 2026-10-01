@@ -1,0 +1,244 @@
+/* Oqerun Writer — dedicated editor surface */
+.writer-app{
+  --writer-blue:#2f6fed;
+  --writer-blue-dark:#1f56c4;
+  --writer-shell:#f3f5f8;
+  --writer-border:#d7dbe2;
+  --writer-text:#24272d;
+  --writer-muted:#68717f;
+  --writer-hover:#eef2f7;
+  --writer-active:#e5edff;
+  width:100%;
+  height:100vh;
+  display:grid;
+  grid-template-rows:48px 38px 94px minmax(0,1fr) 26px;
+  overflow:hidden;
+  background:#f3f4f6;
+  color:var(--writer-text);
+  font-family:"Segoe UI",Arial,sans-serif;
+}
+
+/* Title bar */
+.writer-app .writer-titlebar{
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+  background:#fff;
+  border-bottom:1px solid #e0e3e8;
+  color:var(--writer-text);
+}
+.writer-titlebar-left,.writer-quick-actions{display:flex;align-items:center;height:100%}
+.writer-back{
+  width:30px!important;height:30px!important;margin-right:8px;
+  border:0!important;background:transparent!important;color:#4e5662!important;
+  font-size:20px!important;border-radius:5px!important;cursor:pointer;
+}
+.writer-back:hover{background:#eef1f5!important;color:#111!important}
+.writer-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.writer-logo{
+  width:27px;height:27px;display:grid;place-items:center;
+  border-radius:5px;background:var(--writer-blue);color:#fff;
+  font-size:14px;font-weight:700;
+}
+.writer-brand-text{display:grid;line-height:1.1;min-width:0}
+.writer-brand-text strong{font-size:13px;font-weight:600}
+.writer-brand-text span{
+  max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#7a828d;font-size:10px;margin-top:3px;
+}
+.writer-quick-actions{gap:3px}
+.writer-quick-actions>button:not(.writer-save-button):not(.writer-account){
+  width:30px;height:30px;padding:0;border:0;border-radius:5px;
+  background:transparent;color:#59616c;font-size:17px;cursor:pointer;
+}
+.writer-quick-actions>button:hover{background:#eef1f5}
+.writer-save-state{margin:0 10px;color:#747c87;font-size:10px}
+.writer-save-button{
+  height:30px;padding:0 13px;border:1px solid #cbd2dc;border-radius:5px;
+  background:#fff;color:#303740;font-size:11px;font-weight:600;cursor:pointer;
+}
+.writer-save-button:hover{background:#f3f6fa}
+.writer-account{
+  width:28px;height:28px;margin-left:7px;border:0;border-radius:50%;
+  background:#dce7ff;color:#2f5fbe;font-weight:700;font-size:11px;
+}
+
+/* Menu / tabs */
+.writer-menu-row{
+  display:flex;align-items:stretch;gap:0;padding:0 10px;
+  background:#fff;border-bottom:1px solid #d5dae2;
+}
+.writer-menu-row .office-file-button{
+  height:38px;padding:0 14px;margin-right:5px;
+  border:0;border-bottom:3px solid transparent;background:transparent;
+  color:#303640;font-size:12px;font-weight:600;cursor:pointer;
+}
+.writer-menu-row .office-file-button:hover{background:#f0f3f7}
+.writer-tabs{display:flex;align-items:stretch;gap:1px}
+.writer-tab{
+  position:relative;height:38px;padding:0 17px;border:0;border-bottom:3px solid transparent;
+  background:transparent;color:#505864;font-size:12px;font-weight:500;cursor:pointer;
+}
+.writer-tab:hover{background:#f2f4f7;color:#222}
+.writer-tab.is-active{color:#1f56c4;font-weight:600;border-bottom-color:var(--writer-blue)}
+.writer-search{
+  height:28px;align-self:center;margin-left:auto;min-width:145px;
+  padding:0 10px;border:1px solid #d6dbe3;border-radius:5px;
+  background:#f7f8fa;color:#78808b;font-size:10px;text-align:left;cursor:pointer;
+}
+.writer-search:hover{background:#fff;border-color:#bfc7d3}
+.writer-search kbd{margin-left:5px;padding:2px 4px;border:1px solid #d5dae2;border-radius:3px;background:#fff;font:9px "Segoe UI";color:#7b8490}
+
+/* Ribbon */
+.writer-ribbon{
+  min-height:94px;height:94px;
+  background:#fff;border-bottom:1px solid #d3d8e0;
+  overflow:hidden;
+}
+.writer-ribbon-scroll{
+  height:100%;display:flex;align-items:stretch;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;
+}
+.writer-group{
+  position:relative;display:flex;align-items:center;flex:0 0 auto;
+  min-height:94px;padding:8px 12px 22px;border-right:1px solid #e2e5e9;
+}
+.writer-group[hidden]{display:none!important}
+.writer-group:after{
+  content:attr(data-ribbon-group);
+  position:absolute;left:10px;right:10px;bottom:5px;
+  text-align:center;color:#8a919b;font-size:9px;
+}
+.writer-group-tools{display:flex;align-items:center;gap:3px}
+.writer-group button{
+  min-width:31px;height:32px;padding:0 9px;border:1px solid transparent;border-radius:4px;
+  background:transparent;color:#363c45;font:11px "Segoe UI";cursor:pointer;
+}
+.writer-group button:hover{background:#edf2f8;border-color:#dbe2eb}
+.writer-group button:active{background:#e2e9f3}
+.writer-group select{
+  height:31px;border:1px solid #cfd5dd;border-radius:4px;background:#fff;
+  color:#333942;font:11px "Segoe UI";padding:0 25px 0 7px;
+}
+.writer-font-tools{display:grid;grid-template-columns:150px 120px 58px;gap:4px;margin-bottom:4px}
+.writer-font-tools select{width:100%}
+.writer-format-tools{margin-top:4px}
+.writer-format-tools button{font-size:14px}
+.writer-format-tools button:nth-child(1),
+.writer-format-tools button:nth-child(2),
+.writer-format-tools button:nth-child(3),
+.writer-format-tools button:nth-child(4){font-size:13px}
+.writer-color{
+  position:relative;width:31px;height:32px;display:grid;place-items:center;
+  border-radius:4px;color:#343a42;font-weight:700;font-size:12px;cursor:pointer;
+}
+.writer-color:hover{background:#edf2f8}
+.writer-color input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.writer-clipboard-tools button{font-size:18px}
+.writer-document-group{margin-left:auto;border-right:0}
+.writer-ribbon-save{background:#edf3ff!important;color:#2059c5!important;font-weight:600!important}
+
+/* Layout controls */
+.writer-layout-strip{
+  height:46px;padding:7px 18px;background:#f8f9fb;border-bottom:1px solid #d6dbe2;
+}
+.writer-layout-controls{display:flex;align-items:center;gap:14px;height:100%}
+.writer-layout-controls label{display:flex;align-items:center;gap:6px;color:#646d78;font-size:10px}
+.writer-layout-controls input,.writer-layout-controls select{
+  height:28px;border:1px solid #cfd5dd;border-radius:4px;background:#fff;padding:0 7px;
+  font:11px "Segoe UI";color:#303640;
+}
+.writer-layout-controls input{width:72px}
+.writer-layout-controls label:nth-child(3) input,
+.writer-layout-controls label:nth-child(4) input{width:160px}
+.writer-layout-controls button{height:28px;padding:0 12px;border:1px solid #cbd2dc;border-radius:4px;background:#fff}
+
+/* Document workspace */
+.writer-canvas{
+  min-width:0;min-height:0;overflow:auto;
+  display:flex;flex-direction:column;align-items:center;
+  padding:30px 30px 70px;
+  background:#eef0f3;
+}
+.writer-ruler{
+  flex:0 0 auto;width:794px;height:20px;margin-bottom:5px;
+  display:flex;justify-content:space-around;align-items:flex-start;
+  color:#8d949d;font-size:8px;border-bottom:1px solid #c8cdd5;
+  background:linear-gradient(90deg,transparent 49.8%,#b8bec7 50%,transparent 50.2%);
+}
+.writer-page{
+  position:relative;flex:0 0 auto;width:794px;min-height:1123px;
+  margin:0 auto;padding:90px 88px 86px;
+  background:#fff;color:#20242a;border:1px solid #dfe2e6;
+  box-shadow:0 2px 9px rgba(35,40,48,.13);
+}
+.writer-page-header,.writer-page-footer{
+  position:absolute;left:88px;right:88px;color:#8b929b;font:9px "Segoe UI";
+}
+.writer-page-header{top:35px}.writer-page-footer{bottom:30px}
+.writer-editor{
+  width:100%;min-height:920px;outline:none;
+  font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:11pt;line-height:1.55;
+  color:#20242a;
+}
+.writer-editor h1{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:26pt;line-height:1.15;color:#171a1e;margin:0 0 18px}
+.writer-editor h2{font-size:18pt;line-height:1.25;color:#20242a;margin:22px 0 10px}
+.writer-editor h3{font-size:14pt;color:#252a31;margin:18px 0 8px}
+.writer-editor p{margin:0 0 10px}
+.writer-editor a{color:#245fca}
+.writer-editor blockquote{margin:16px 0;padding:8px 14px;border-left:3px solid #6d92db;background:#f5f7fa}
+.writer-editor table{width:100%;border-collapse:collapse}
+.writer-editor td,.writer-editor th{border:1px solid #cfd4dc;padding:6px}
+.writer-editor img{max-width:100%;height:auto}
+.writer-page-wide{width:960px!important}
+
+/* Status */
+.writer-statusbar{
+  height:26px;display:flex;align-items:center;gap:14px;padding:0 12px;
+  background:#f8f9fb;border-top:1px solid #d3d8e0;color:#69727e;
+  font-size:10px;
+}
+.writer-status-divider{width:1px;height:13px;background:#d2d7de}
+.writer-status-spacer{flex:1}
+.writer-zoom{padding-left:10px;border-left:1px solid #d4d9df}
+
+/* View panel / focus */
+.writer-view-panel{
+  display:flex;align-items:center;gap:10px;padding:0 18px;color:#626b77;font-size:10px;
+}
+.writer-view-panel strong{color:#303740;font-size:11px}
+.writer-view-panel span{margin-right:10px}
+.writer-view-panel button{
+  height:32px;padding:0 12px;border:1px solid #ccd3dd;border-radius:4px;background:#fff;color:#3e4650;
+}
+.writer-focus-mode{grid-template-rows:1fr!important}
+.writer-focus-mode .writer-titlebar,
+.writer-focus-mode .writer-menu-row,
+.writer-focus-mode .writer-ribbon,
+.writer-focus-mode .writer-layout-strip,
+.writer-focus-mode .writer-statusbar{display:none!important}
+.writer-focus-mode .writer-canvas{padding-top:45px;background:#e8eaed}
+.writer-focus-mode .writer-page{box-shadow:0 4px 22px rgba(30,35,42,.18)}
+
+/* Backstage remains full screen */
+.writer-app ~ .office-file-menu{font-family:"Segoe UI",Arial,sans-serif}
+
+/* Responsive */
+@media(max-width:900px){
+  .writer-font-tools{grid-template-columns:130px 105px 55px}
+  .writer-page,.writer-ruler{width:720px}
+  .writer-page{padding-left:65px;padding-right:65px}
+  .writer-page-header,.writer-page-footer{left:65px;right:65px}
+}
+@media(max-width:700px){
+  .writer-search span,.writer-search kbd{display:none}
+  .writer-search{min-width:34px;width:34px}
+  .writer-tab{padding:0 11px}
+  .writer-ribbon{height:86px;min-height:86px}
+  .writer-group{min-height:86px}
+  .writer-page,.writer-ruler{width:640px}
+  .writer-page{padding-left:48px;padding-right:48px}
+  .writer-page-header,.writer-page-footer{left:48px;right:48px}
+}
