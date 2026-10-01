@@ -1,5 +1,6 @@
 import "./ui/styles.css";
 import "./ui/writer.css";
+import "./ui/shell.css";
 import { Office } from "./core/Office";
 
 function showStartupError(error: unknown): void {
