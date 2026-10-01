@@ -144,7 +144,8 @@ function workbookFromContent(content: SpreadsheetContent): XLSX.WorkBook {
         const ref = XLSX.utils.encode_cell({ r: row, c: col });
         const raw = sheet.cells[ref];
         if (raw !== undefined && raw !== null && raw !== "") hasValue = true;
-        values.push(raw ?? "");
+        if (typeof raw === "string" && raw.startsWith("=")) values.push({ t: "n", f: raw.slice(1) });
+        else values.push(raw ?? "");
       }
       if (hasValue) rows.push(values);
     }
