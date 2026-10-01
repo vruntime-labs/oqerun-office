@@ -1,5 +1,6 @@
 import type { OfficeDocument, PresentationContent, PresentationSlide } from "../core/DocumentModel";
 import { DocumentStore } from "../core/DocumentStore";
+import { FileMenu } from "../ui/FileMenu";
 
 export class Slides {
   private readonly root: HTMLElement;
@@ -56,6 +57,7 @@ export class Slides {
     this.bind();
     this.renderStrip();
     this.loadActive();
+    this.mountFileMenu();
   }
 
   async openPath(path: string): Promise<void> {
@@ -69,6 +71,48 @@ export class Slides {
     this.setStatus("Opened");
   }
 
+  private mountFileMenu(): void {
+    new FileMenu(this.root, {
+      module: "slides",
+      title: "Oqerun Slides",
+      acceptedTypes: ".oqslide",
+      onHome: () => this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
+      onNew: () => {
+        this.state.activeSlide = 0;
+        this.state.slides.splice(0, this.state.slides.length, this.newSlide("Title slide"));
+        this.renderStrip();
+        this.loadActive();
+        this.setStatus("New presentation");
+      },
+      onSave: () => void this.save(),
+      onOpenRecent: (path) => void this.openPath(path),
+      onOpenFile: (file) => void this.importFile(file),
+    }).mount();
+  }
+
+  private async importFile(file: File): Promise<void> {
+    if (!file.name.toLowerCase().endsWith(".oqslide")) {
+      window.alert("Oqerun Slides currently supports .oqslide from Open From.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(await file.text()) as OfficeDocument<PresentationContent>;
+      if (!parsed?.content?.slides || !parsed.metadata) throw new Error("Invalid Oqerun presentation");
+      const safeName = parsed.metadata.name.trim().replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "untitled-presentation";
+      const path = await this.store.save({
+        ...parsed,
+        metadata: {
+          ...parsed.metadata,
+          path: `/home/user/Documents/${safeName}.oqslide`,
+        },
+      });
+      this.render();
+      await this.openPath(path);
+    } catch {
+      window.alert("The selected Oqerun presentation could not be opened.");
+    }
+  }
   private bind(): void {
     this.root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-field]").forEach((field) =>
       field.addEventListener("input", () => {
