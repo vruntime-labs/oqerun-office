@@ -25,7 +25,18 @@ export class Slides {
           <div class="slides-title"><span class="slides-app-icon">P</span><div><strong>Oqerun Slides</strong><span data-file-name>Untitled presentation</span></div></div>
           <span class="slides-status" data-status>Ready</span>
         </header>
-        <div class="slides-toolbar">
+        <nav class="office-command-bar" aria-label="Application menu">
+          <button type="button" data-command-menu="file">File</button>
+          <button type="button" data-command-menu="edit">Edit</button>
+          <button type="button" data-command-menu="view">View</button>
+          <button type="button" data-command-menu="insert">Insert</button>
+          <button type="button" data-command-menu="format">Format</button>
+          <button type="button" data-command-menu="tools">Tools</button>
+          <button type="button" data-command-menu="help">Help</button>
+          <span class="office-command-spacer"></span>
+          <span class="office-command-search">⌕&nbsp; Search commands <kbd>Ctrl K</kbd></span>
+        </nav>
+        <$1 class="slides-toolbar">
           <button data-action="add" type="button">＋ Slide</button>
           <button data-action="duplicate" type="button">Duplicate</button>
           <button data-action="delete" type="button">Delete</button>
