@@ -6,7 +6,7 @@ const EMPTY_HTML = "<h1>Untitled document</h1><p>Start writing with Oqerun Write
 export class Writer {
   private readonly root: HTMLElement;
   private readonly store = new DocumentStore();
-  private documentId = crypto.randomUUID();
+  private documentId: string = crypto.randomUUID();
   private createdAt = new Date().toISOString();
   private fileName = "Untitled document";
 
