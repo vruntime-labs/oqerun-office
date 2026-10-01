@@ -9,6 +9,9 @@ export class Slides {
     activeSlide: 0,
     slides: [this.newSlide("Title slide")],
   };
+  private documentId = crypto.randomUUID();
+  private createdAt = new Date().toISOString();
+  private fileName = "Untitled presentation";
 
   constructor(root: HTMLElement) { this.root = root; }
 
@@ -62,6 +65,9 @@ export class Slides {
 
   async openPath(path: string): Promise<void> {
     const document = await this.store.load<PresentationContent>(path);
+    this.documentId = document.metadata.id;
+    this.createdAt = document.metadata.createdAt;
+    this.fileName = document.metadata.name;
     this.state.activeSlide = document.content.activeSlide;
     this.state.slides.splice(0, this.state.slides.length, ...document.content.slides);
     const name = this.root.querySelector<HTMLElement>("[data-file-name]");
@@ -78,6 +84,9 @@ export class Slides {
       acceptedTypes: ".oqslide",
       onHome: () => this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
       onNew: () => {
+        this.documentId = crypto.randomUUID();
+        this.createdAt = new Date().toISOString();
+        this.fileName = "Untitled presentation";
         this.state.activeSlide = 0;
         this.state.slides.splice(0, this.state.slides.length, this.newSlide("Title slide"));
         this.renderStrip();
@@ -85,6 +94,9 @@ export class Slides {
         this.setStatus("New presentation");
       },
       onSave: () => void this.save(),
+      onSaveAs: () => void this.saveAs(),
+      onDownload: () => this.download(),
+      onPrint: () => window.print(),
       onOpenRecent: (path) => void this.openPath(path),
       onOpenFile: (file) => void this.importFile(file),
     }).mount();
@@ -263,10 +275,31 @@ export class Slides {
     this.renderActiveCard(); this.setStatus("Shape added");
   }
 
+  private async saveAs(): Promise<void> {
+    const value = window.prompt("Save As — presentation name", this.fileName);
+    if (!value?.trim()) return;
+    this.fileName = value.trim().replace(/\.oqslide$/i, "");
+    await this.save();
+  }
+
+  private download(): void {
+    const payload = JSON.stringify({
+      metadata: { id: this.documentId, name: this.fileName, createdAt: this.createdAt, modifiedAt: new Date().toISOString() },
+      content: this.state
+    }, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = this.fileName.replace(/[^a-z0-9._-]+/gi, "-") + ".oqslide";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    this.setStatus("Downloaded");
+  }
+
   private async save(): Promise<void> {
     const now = new Date().toISOString();
     const document: OfficeDocument<PresentationContent> = {
-      metadata: { id: "oqerun-slide-deck", name: "Untitled presentation", path: "/home/user/Documents/untitled-presentation.oqslide", mimeType: "application/x-oqerun-presentation", createdAt: now, modifiedAt: now },
+      metadata: { id: this.documentId, name: this.fileName, path: `/home/user/Documents/${this.fileName.replace(/[^a-z0-9._-]+/gi, "-")}.oqslide`, mimeType: "application/x-oqerun-presentation", createdAt: this.createdAt, modifiedAt: now },
       content: this.state,
     };
     await this.store.save(document);
