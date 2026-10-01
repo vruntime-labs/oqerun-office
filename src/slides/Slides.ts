@@ -9,7 +9,7 @@ export class Slides {
     activeSlide: 0,
     slides: [this.newSlide("Title slide")],
   };
-  private documentId = crypto.randomUUID();
+  private documentId: string = crypto.randomUUID();
   private createdAt = new Date().toISOString();
   private fileName = "Untitled presentation";
 
