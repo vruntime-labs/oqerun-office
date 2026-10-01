@@ -203,29 +203,11 @@ export class Writer {
   }
 
   private setupRibbon(): void {
-    const toolbar = this.root.querySelector<HTMLElement>(".writer-toolbar");
+    const ribbon = this.root.querySelector<HTMLElement>(".writer-ribbon");
     const tabs = Array.from(this.root.querySelectorAll<HTMLButtonElement>("[data-ribbon-tab]"));
-    const groups = Array.from(this.root.querySelectorAll<HTMLElement>(".writer-toolbar .toolbar-group"));
+    const groups = Array.from(this.root.querySelectorAll<HTMLElement>(".writer-group"));
     const settingsStrip = this.root.querySelector<HTMLElement>("[data-settings-strip]");
-    if (!toolbar || !tabs.length) return;
-
-    const groupDefinitions = [
-      { index: 0, tab: "home", label: "Clipboard" },
-      { index: 1, tab: "home", label: "Font" },
-      { index: 2, tab: "home", label: "Text" },
-      { index: 3, tab: "home", label: "Paragraph" },
-      { index: 4, tab: "home", label: "Alignment" },
-      { index: 5, tab: "review", label: "Find & Replace" },
-      { index: 6, tab: "insert", label: "Insert" },
-      { index: 7, tab: "home", label: "Document" },
-    ] as const;
-
-    groups.forEach((group, index) => {
-      const definition = groupDefinitions[index];
-      if (!definition) return;
-      group.dataset.ribbonTab = definition.tab;
-      group.dataset.ribbonGroup = definition.label;
-    });
+    if (!ribbon || !tabs.length) return;
 
     const showTab = (tab: string): void => {
       tabs.forEach((button) => {
@@ -235,49 +217,44 @@ export class Writer {
       });
 
       groups.forEach((group) => {
-        const visible = group.dataset.ribbonTab === tab;
-        group.hidden = !visible;
+        group.hidden = group.dataset.ribbonTab !== tab;
       });
 
       if (settingsStrip) settingsStrip.hidden = tab !== "layout";
 
-      toolbar.classList.toggle("ribbon-empty", tab === "layout" || tab === "view");
-      toolbar.dataset.activeRibbon = tab;
+      ribbon.querySelectorAll<HTMLElement>(".writer-view-panel").forEach((node) => node.remove());
 
-      toolbar.querySelectorAll<HTMLElement>(".ribbon-empty-state,.ribbon-view-group").forEach((node) => node.remove());
       if (tab === "layout") {
         const panel = document.createElement("div");
-        panel.className = "ribbon-empty-state";
-        panel.innerHTML = `<span class="ribbon-empty-icon">▦</span><div><strong>Page Setup</strong><span>Adjust page size, margins, header and footer in the panel below.</span></div>`;
-        toolbar.appendChild(panel);
-      } else if (tab === "view") {
+        panel.className = "writer-view-panel";
+        panel.innerHTML = `<strong>Page layout</strong><span>Paper size, margins, headers and footers are shown below.</span>`;
+        ribbon.querySelector(".writer-ribbon-scroll")?.appendChild(panel);
+      }
+
+      if (tab === "view") {
         const panel = document.createElement("div");
-        panel.className = "ribbon-view-group";
-        panel.innerHTML = `<button type="button" data-view-action="focus">Focus mode</button><button type="button" data-view-action="page-width">Page width</button><button type="button" data-view-action="print-layout">Print layout</button>`;
-        toolbar.appendChild(panel);
+        panel.className = "writer-view-panel";
+        panel.innerHTML = `<button type="button" data-view-action="focus">Focus</button><button type="button" data-view-action="width">Page width</button><button type="button" data-view-action="top">Print layout</button>`;
+        ribbon.querySelector(".writer-ribbon-scroll")?.appendChild(panel);
         panel.querySelector('[data-view-action="focus"]')?.addEventListener("click", () => {
-          this.root.querySelector(".writer-shell")?.classList.toggle("writer-focus-mode");
+          this.root.querySelector(".writer-app")?.classList.toggle("writer-focus-mode");
         });
-        panel.querySelector('[data-view-action="page-width"]')?.addEventListener("click", () => {
+        panel.querySelector('[data-view-action="width"]')?.addEventListener("click", () => {
           this.root.querySelector(".writer-page")?.classList.toggle("writer-page-wide");
         });
-        panel.querySelector('[data-view-action="print-layout"]')?.addEventListener("click", () => {
-          this.root.querySelector(".writer-workspace")?.scrollTo({ top: 0, behavior: "smooth" });
+        panel.querySelector('[data-view-action="top"]')?.addEventListener("click", () => {
+          this.root.querySelector(".writer-canvas")?.scrollTo({ top: 0, behavior: "smooth" });
         });
       }
     };
 
     tabs.forEach((tab) => tab.addEventListener("click", () => {
-      const name = tab.dataset.ribbonTab ?? "home";
-      if (name === "layout" || name === "view") {
-        showTab(name);
-        return;
-      }
-      showTab(name);
+      showTab(tab.dataset.ribbonTab ?? "home");
     }));
 
     showTab("home");
   }
+
 
   private mountFileMenu(): void {
     new FileMenu(this.root, {
