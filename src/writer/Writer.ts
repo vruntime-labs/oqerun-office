@@ -168,7 +168,7 @@ export class Writer {
     editor.focus();
   }
 
-  private async importFile(file: File): Promise<void> {
+  public async importFile(file: File): Promise<void> {
     const lower = file.name.toLowerCase();
 
     if (lower.endsWith(".docx")) {
