@@ -202,7 +202,7 @@ export class Sheets {
     this.focusCell(focusRef, false);
   }
 
-  private async importFile(file: File): Promise<void> {
+  public async importFile(file: File): Promise<void> {
     if (file.name.toLowerCase().endsWith(".oqsheet")) {
       try {
         const parsed = JSON.parse(await file.text()) as OfficeDocument<SpreadsheetContent>;
