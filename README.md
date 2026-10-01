@@ -67,7 +67,7 @@ Editors save structured Oqerun documents through the VFS boundary. The storage p
 - Select/edit/resize-position controls for slide elements
 - Speaker notes and slide transitions
 - Full presentation mode with keyboard navigation and fullscreen
-- `.pptx` export
+- `.pptx` import and export
 - Local structured presentation save
 
 ## Planned file support
@@ -81,7 +81,7 @@ XLS, XLSX, ODS, CSV and additional compatible formats where practical.
 ### Slides
 PPT, PPTX, ODP and additional compatible formats where practical.
 
-The native `.oqdoc`, `.oqsheet` and `.oqslide` representations remain the internal application documents. The current format engine adds browser-side DOCX import/export, spreadsheet standards import/export (XLS/XLSX/ODS/CSV), and PPTX export while keeping the native models as the editing source of truth.
+The native `.oqdoc`, `.oqsheet` and `.oqslide` representations remain the internal application documents. The current format engine adds browser-side DOCX import/export, spreadsheet standards import/export (XLS/XLSX/ODS/CSV), and PPTX import/export while keeping the native models as the editing source of truth.
 
 ## Oqerun OS integration
 
