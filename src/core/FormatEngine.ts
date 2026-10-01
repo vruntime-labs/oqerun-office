@@ -301,7 +301,7 @@ export async function importSlidesPptx(file: File): Promise<PresentationContent>
     return node.body.innerText.trim();
   };
 
-  const slides = (parsed.slides ?? []).map((source: any, index: number) => {
+  const slides: PresentationContent["slides"] = (parsed.slides ?? []).map((source: any, index: number): PresentationContent["slides"][number] => {
     const elements: PresentationElement[] = (source.elements ?? []).flatMap((item: any) => {
       const type = item.type === "image" ? "image" : item.type === "shape" ? "shape" : item.type === "text" ? "text" : null;
       if (!type) return [];
@@ -330,8 +330,8 @@ export async function importSlidesPptx(file: File): Promise<PresentationContent>
     const titleElement = elements.find((element) => element.type === "text" && element.y !== undefined && element.y < 30);
     const title = titleElement?.value || `Imported slide ${index + 1}`;
     const body = elements.filter((element) => element !== titleElement && element.type === "text").map((element) => element.value).join("\n");
-    const background = source.fill?.type === "color" ? source.fill.value : "#ffffff";
-    const theme = background.toLowerCase() === "#ffffff" || background.toLowerCase() === "#fff" ? "light" : "dark";
+    const background = source.fill?.type === "color" ? String(source.fill.value) : "#ffffff";
+    const theme: PresentationSlide["theme"] = background.toLowerCase() === "#ffffff" || background.toLowerCase() === "#fff" ? "light" : "dark";
 
     return {
       id: crypto.randomUUID(),
@@ -340,7 +340,7 @@ export async function importSlidesPptx(file: File): Promise<PresentationContent>
       notes: source.note ?? "",
       theme,
       background,
-      layout: body ? "title-body" : title ? "title" : "blank",
+      layout: (body ? "title-body" : title ? "title" : "blank") as PresentationSlide["layout"],
       transition: "none",
       elements,
     };
