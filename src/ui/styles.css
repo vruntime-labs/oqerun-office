@@ -333,3 +333,147 @@ body {
     display: none;
   }
 }
+
+
+/* Word-inspired ribbon redesign: tabs + contextual groups, without copying Microsoft's branding. */
+.office-ribbon-tabs{
+  height:40px;
+  min-height:40px;
+  display:flex;
+  align-items:flex-end;
+  gap:2px;
+  padding:0 14px;
+  background:#0b1320;
+  border-bottom:1px solid var(--oq-border);
+}
+.office-ribbon-tabs .ribbon-tab{
+  position:relative;
+  height:40px;
+  min-width:70px;
+  padding:0 15px;
+  border:0;
+  border-radius:7px 7px 0 0;
+  background:transparent;
+  color:#9aa8bf;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+.office-ribbon-tabs .ribbon-tab:hover{background:#151f31;color:#fff}
+.office-ribbon-tabs .ribbon-tab.is-active{background:#172238;color:#fff}
+.office-ribbon-tabs .ribbon-tab.is-active:after{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:0;
+  height:2px;
+  border-radius:2px 2px 0 0;
+  background:var(--oq-accent);
+}
+.writer-toolbar{
+  min-height:88px!important;
+  height:88px!important;
+  max-height:88px!important;
+  padding:7px 14px 5px!important;
+  align-items:stretch!important;
+  background:#172238!important;
+  border-bottom:1px solid var(--oq-border-strong)!important;
+  box-shadow:none!important;
+}
+.writer-toolbar .toolbar-group{
+  position:relative;
+  display:flex;
+  align-items:flex-start!important;
+  align-content:flex-start;
+  height:75px;
+  min-height:75px!important;
+  padding:5px 10px 19px!important;
+  margin:0!important;
+  border-right:1px solid rgba(255,255,255,.10)!important;
+  gap:3px!important;
+}
+.writer-toolbar .toolbar-group:after{
+  content:attr(data-ribbon-group);
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:2px;
+  text-align:center;
+  color:#6f7e98;
+  font-size:9px;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.writer-toolbar .toolbar-group[hidden]{display:none!important}
+.writer-toolbar .toolbar-group button,
+.writer-toolbar .toolbar-group select,
+.writer-toolbar .toolbar-group .color-tool{
+  height:34px!important;
+  min-height:34px!important;
+  border-radius:5px!important;
+  font-size:12px!important;
+}
+.writer-toolbar .toolbar-group select{
+  background:#101a2b!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  color:#e6ecf8!important;
+}
+.writer-toolbar .toolbar-group button:hover{
+  background:#243653!important;
+  border-color:rgba(145,165,255,.32)!important;
+}
+.writer-toolbar .toolbar-group:nth-child(2) select:first-child{min-width:118px}
+.writer-toolbar .toolbar-group:nth-child(2) select:nth-child(2){min-width:118px}
+.writer-toolbar .toolbar-group:nth-child(2) select:nth-child(3){min-width:58px}
+.writer-toolbar .toolbar-group:nth-child(8){margin-left:auto!important}
+.ribbon-empty-state{
+  height:75px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:0 20px;
+  color:#b7c3d7;
+}
+.ribbon-empty-state strong{display:block;color:#edf2ff;font-size:13px;margin-bottom:3px}
+.ribbon-empty-state span:last-child{display:block;color:#7887a0;font-size:11px}
+.ribbon-empty-icon{
+  width:36px;height:36px;display:grid;place-items:center;border-radius:8px;
+  background:#22324d;color:#91a5ff;font-size:17px;
+}
+.ribbon-view-group{
+  height:75px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 12px;
+}
+.ribbon-view-group button{
+  height:36px!important;
+  padding:0 13px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:6px!important;
+  background:#101a2b!important;
+  color:#dce4f2!important;
+}
+.writer-settings-strip:not([hidden]){
+  min-height:54px;
+  max-height:54px;
+  background:#111b2c!important;
+}
+.writer-focus-mode .writer-topbar,
+.writer-focus-mode .office-ribbon-tabs,
+.writer-focus-mode .writer-toolbar,
+.writer-focus-mode .writer-statusbar{display:none!important}
+.writer-focus-mode .writer-workspace{padding-top:36px}
+.writer-page-wide .writer-page{width:min(980px,calc(100% - 16px))!important}
+@media(max-width:900px){
+  .office-ribbon-tabs .ribbon-tab{min-width:62px;padding:0 11px}
+  .writer-toolbar{overflow-x:auto!important}
+}
+@media(max-width:640px){
+  .office-ribbon-tabs{overflow-x:auto;align-items:flex-end}
+  .office-ribbon-tabs .ribbon-tab{min-width:66px}
+  .writer-toolbar{height:78px!important;min-height:78px!important;max-height:78px!important}
+  .writer-toolbar .toolbar-group{height:66px;min-height:66px!important}
+}
