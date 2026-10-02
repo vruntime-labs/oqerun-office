@@ -1,0 +1,708 @@
+
+/*
+ * Oqerun Office — Microsoft Office-style presentation layer
+ * This file is intentionally isolated from the editor logic.
+ */
+
+:root{
+  --ms-blue:#185abd;
+  --ms-blue-dark:#124b9a;
+  --ms-blue-soft:#eaf2ff;
+  --ms-ink:#242424;
+  --ms-muted:#616161;
+  --ms-line:#d6d6d6;
+  --ms-line-soft:#e8e8e8;
+  --ms-ribbon:#ffffff;
+  --ms-workspace:#f3f2f1;
+  --ms-hover:#f3f6fb;
+  --ms-active:#e5effd;
+  --ms-green:#107c10;
+}
+
+*{box-sizing:border-box}
+
+html,body,#app{
+  width:100%;
+  height:100%;
+  margin:0;
+}
+
+body{
+  overflow:hidden;
+  font-family:"Segoe UI",SegoeUI,Arial,sans-serif;
+  color:var(--ms-ink);
+  background:var(--ms-workspace);
+  -webkit-font-smoothing:antialiased;
+}
+
+button,input,select,textarea{
+  font:inherit;
+}
+
+/* ------------------------------------------------------------------ */
+/* Application title bar                                               */
+/* ------------------------------------------------------------------ */
+
+.office-app-shell{
+  position:fixed;
+  inset:0;
+  display:grid;
+  grid-template-rows:46px 34px minmax(0,1fr);
+  min-width:980px;
+  background:var(--ms-workspace);
+  color:var(--ms-ink);
+}
+
+.office-global-bar{
+  position:relative;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  height:46px;
+  padding:0 10px;
+  background:#185abd;
+  color:#fff;
+  border:0;
+  box-shadow:none;
+}
+
+.office-global-brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:160px;
+  height:100%;
+  flex:0 0 auto;
+}
+
+.office-global-brand > *{
+  color:#fff;
+}
+
+.office-global-brand button,
+.office-global-bar button{
+  border:0;
+  background:transparent;
+  color:inherit;
+}
+
+.office-global-brand button:hover,
+.office-global-bar button:hover{
+  background:rgba(255,255,255,.12);
+}
+
+.office-global-tabs,
+.office-tabs,
+.office-tab-bar{
+  display:flex;
+  align-items:stretch;
+  align-self:stretch;
+  min-width:0;
+  flex:1 1 auto;
+  gap:2px;
+  overflow:auto hidden;
+  scrollbar-width:none;
+}
+
+.office-global-tabs::-webkit-scrollbar,
+.office-tabs::-webkit-scrollbar,
+.office-tab-bar::-webkit-scrollbar{
+  display:none;
+}
+
+.office-document-tab,
+.office-tab{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:150px;
+  max-width:260px;
+  padding:0 13px;
+  border:0;
+  border-radius:0;
+  color:#fff;
+  background:transparent;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.office-document-tab:hover,
+.office-tab:hover{
+  background:rgba(255,255,255,.10);
+}
+
+.office-document-tab.is-active,
+.office-tab.is-active,
+.office-document-tab.active,
+.office-tab.active{
+  background:#fff;
+  color:var(--ms-ink);
+}
+
+.office-document-tab.is-active::after,
+.office-tab.is-active::after,
+.office-document-tab.active::after,
+.office-tab.active::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:3px;
+  background:#fff;
+}
+
+.office-document-tab.is-active::after,
+.office-tab.is-active::after{
+  background:var(--ms-blue);
+}
+
+.office-new-tab{
+  flex:0 0 36px;
+  width:36px;
+  min-width:36px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+}
+
+.office-global-actions{
+  display:flex;
+  align-items:center;
+  gap:2px;
+  flex:0 0 auto;
+}
+
+.office-global-actions button{
+  width:34px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:2px;
+}
+
+.office-presence{
+  display:flex;
+  align-items:center;
+  gap:2px;
+  margin-left:4px;
+}
+
+.office-presence > *{
+  width:28px;
+  height:28px;
+  border:2px solid #fff;
+  border-radius:50%;
+}
+
+/* ------------------------------------------------------------------ */
+/* App navigation / document tabs                                      */
+/* ------------------------------------------------------------------ */
+
+.office-app-shell > .office-document-host{
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  background:var(--ms-workspace);
+}
+
+.office-document-host{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+
+.office-document-host > .writer-app{
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Writer: desktop Word-like title/ribbon structure                    */
+/* ------------------------------------------------------------------ */
+
+.office-document-host .writer-app{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:42px 36px 108px 28px minmax(0,1fr) 26px!important;
+  grid-template-areas:
+    "word-title"
+    "word-tabs"
+    "word-ribbon"
+    "word-ruler"
+    "word-canvas"
+    "word-status"!important;
+  overflow:hidden!important;
+  background:var(--ms-workspace)!important;
+  color:var(--ms-ink)!important;
+  border:0!important;
+}
+
+/* title / quick access */
+.office-document-host .writer-topbar,
+.office-document-host .writer-header{
+  grid-area:word-title!important;
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  height:42px!important;
+  padding:0 10px!important;
+  gap:8px!important;
+  background:#fff!important;
+  color:var(--ms-ink)!important;
+  border-bottom:1px solid var(--ms-line)!important;
+  box-shadow:none!important;
+}
+
+.office-document-host .writer-topbar .writer-back,
+.office-document-host .writer-topbar button{
+  color:var(--ms-ink)!important;
+}
+
+.office-document-host .writer-topbar button{
+  min-width:30px;
+  min-height:30px;
+  border:0!important;
+  border-radius:2px!important;
+  background:transparent!important;
+}
+
+.office-document-host .writer-topbar button:hover{
+  background:#f2f2f2!important;
+}
+
+.office-document-host .writer-topbar .writer-logo,
+.office-document-host .writer-header .writer-logo{
+  width:28px!important;
+  height:28px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:3px!important;
+  background:var(--ms-blue)!important;
+  color:#fff!important;
+  font-weight:700!important;
+}
+
+.office-document-host .writer-topbar .writer-title,
+.office-document-host .writer-header .writer-title{
+  min-width:0!important;
+  font-size:14px!important;
+  font-weight:600!important;
+  color:var(--ms-ink)!important;
+}
+
+.office-document-host .writer-topbar .writer-filename,
+.office-document-host .writer-header .writer-filename{
+  min-width:80px!important;
+  max-width:360px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:var(--ms-ink)!important;
+  font-size:13px!important;
+}
+
+.office-document-host .writer-topbar .writer-save-status{
+  color:var(--ms-muted)!important;
+  font-size:12px!important;
+}
+
+.office-document-host .writer-topbar .writer-actions{
+  margin-left:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:2px!important;
+}
+
+/* ribbon tab row */
+.office-document-host .writer-menu-row,
+.office-document-host .writer-tabs{
+  grid-area:word-tabs!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  min-width:0!important;
+  height:36px!important;
+  padding:0 8px!important;
+  background:#fff!important;
+  border-bottom:1px solid var(--ms-line)!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+
+.office-document-host .writer-tabs button,
+.office-document-host .writer-menu-row button,
+.office-document-host .writer-menu-row > button{
+  position:relative!important;
+  height:36px!important;
+  min-width:62px!important;
+  padding:0 13px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#444!important;
+  font-size:13px!important;
+  font-weight:400!important;
+  cursor:pointer!important;
+}
+
+.office-document-host .writer-tabs button:hover,
+.office-document-host .writer-menu-row button:hover{
+  background:#f4f4f4!important;
+  color:#111!important;
+}
+
+.office-document-host .writer-tabs button.is-active,
+.office-document-host .writer-tabs button.active,
+.office-document-host .writer-tabs button[aria-selected="true"],
+.office-document-host .writer-menu-row button.is-active,
+.office-document-host .writer-menu-row button.active{
+  color:var(--ms-blue)!important;
+  font-weight:600!important;
+}
+
+.office-document-host .writer-tabs button.is-active::after,
+.office-document-host .writer-tabs button.active::after,
+.office-document-host .writer-tabs button[aria-selected="true"]::after{
+  content:"";
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:-1px;
+  height:3px;
+  background:var(--ms-blue);
+}
+
+/* File tab */
+.office-document-host .writer-menu-row .file-menu-trigger,
+.office-document-host .writer-tabs .file-menu-trigger{
+  color:#444!important;
+}
+
+.office-document-host .writer-menu-row .file-menu-trigger:hover,
+.office-document-host .writer-tabs .file-menu-trigger:hover{
+  background:#f5f5f5!important;
+}
+
+/* ribbon */
+.office-document-host .writer-ribbon{
+  grid-area:word-ribbon!important;
+  display:flex!important;
+  align-items:stretch!important;
+  min-width:0!important;
+  height:108px!important;
+  padding:6px 8px 4px!important;
+  background:#fff!important;
+  border-bottom:1px solid var(--ms-line)!important;
+  overflow:hidden!important;
+}
+
+.office-document-host .writer-ribbon,
+.office-document-host .writer-ribbon *{
+  --ribbon-accent:var(--ms-blue);
+}
+
+.office-document-host .writer-group{
+  position:relative!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:3px!important;
+  min-width:0!important;
+  padding:4px 8px 18px!important;
+  border-right:1px solid var(--ms-line-soft)!important;
+  background:#fff!important;
+}
+
+.office-document-host .writer-group:last-child{
+  border-right:0!important;
+}
+
+.office-document-host .writer-group::after{
+  content:attr(data-label);
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:3px;
+  height:14px;
+  color:#666;
+  font-size:10px;
+  line-height:14px;
+  text-align:center;
+  white-space:nowrap;
+}
+
+.office-document-host .writer-group-label{
+  position:absolute!important;
+  left:8px!important;
+  right:8px!important;
+  bottom:3px!important;
+  color:#666!important;
+  font-size:10px!important;
+  line-height:14px!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+
+.office-document-host .writer-ribbon button{
+  min-width:30px!important;
+  height:30px!important;
+  padding:3px 7px!important;
+  border:1px solid transparent!important;
+  border-radius:2px!important;
+  background:#fff!important;
+  color:#333!important;
+  cursor:pointer!important;
+}
+
+.office-document-host .writer-ribbon button:hover{
+  background:#f3f6fb!important;
+  border-color:#c9d8ee!important;
+}
+
+.office-document-host .writer-ribbon button.is-active,
+.office-document-host .writer-ribbon button.active,
+.office-document-host .writer-ribbon button[aria-pressed="true"]{
+  background:#dbe9f9!important;
+  border-color:#9abce5!important;
+  color:#174a8b!important;
+}
+
+.office-document-host .writer-ribbon select,
+.office-document-host .writer-ribbon input{
+  height:30px!important;
+  border:1px solid #bfbfbf!important;
+  border-radius:2px!important;
+  background:#fff!important;
+  color:#222!important;
+}
+
+.office-document-host .writer-ribbon .primary,
+.office-document-host .writer-ribbon .primary-action{
+  background:var(--ms-blue)!important;
+  color:#fff!important;
+  border-color:var(--ms-blue)!important;
+}
+
+.office-document-host .writer-ribbon .primary:hover,
+.office-document-host .writer-ribbon .primary-action:hover{
+  background:var(--ms-blue-dark)!important;
+}
+
+/* clipboard / font controls get Word-like compact sizing */
+.office-document-host .writer-clipboard-tools,
+.office-document-host .writer-font-group,
+.office-document-host .writer-format-tools,
+.office-document-host .writer-insert-group,
+.office-document-host .writer-document-group{
+  display:flex!important;
+}
+
+.office-document-host .writer-font-group{
+  min-width:330px!important;
+}
+
+.office-document-host .writer-font-group select{
+  min-width:150px!important;
+}
+
+.office-document-host .writer-font-group input[type="number"]{
+  width:58px!important;
+}
+
+/* contextual strips */
+.office-document-host .writer-layout-strip,
+.office-document-host .writer-contextual-strip{
+  display:none!important;
+}
+
+/* ruler */
+.office-document-host .writer-ruler{
+  grid-area:word-ruler!important;
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  height:28px!important;
+  padding:0 0!important;
+  background:#fff!important;
+  color:#777!important;
+  border-bottom:1px solid var(--ms-line)!important;
+  overflow:hidden!important;
+}
+
+.office-document-host .writer-ruler::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 31px,
+      #c7c7c7 31px,
+      #c7c7c7 32px
+    );
+  opacity:.65;
+  pointer-events:none;
+}
+
+.office-document-host .writer-ruler > *{
+  position:relative;
+  z-index:1;
+}
+
+/* workspace */
+.office-document-host .writer-canvas{
+  grid-area:word-canvas!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:auto!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  padding:26px 34px 40px!important;
+  background:#f3f2f1!important;
+}
+
+.office-document-host .writer-page{
+  position:relative!important;
+  flex:0 0 auto!important;
+  width:820px!important;
+  min-height:1123px!important;
+  margin:0 auto!important;
+  background:#fff!important;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.08),
+    0 2px 7px rgba(0,0,0,.16)!important;
+}
+
+.office-document-host .writer-editor{
+  background:#fff!important;
+  color:#202020!important;
+  font-family:"Aptos","Calibri","Segoe UI",Arial,sans-serif!important;
+  font-size:11pt!important;
+  line-height:1.5!important;
+}
+
+.office-document-host .writer-editor:focus{
+  outline:0!important;
+}
+
+/* status bar */
+.office-document-host .writer-statusbar,
+.office-document-host .office-footer{
+  grid-area:word-status!important;
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  height:26px!important;
+  padding:0 9px!important;
+  background:#185abd!important;
+  color:#fff!important;
+  border:0!important;
+  font-size:11px!important;
+}
+
+.office-document-host .writer-statusbar > *,
+.office-document-host .office-footer > *{
+  color:#fff!important;
+}
+
+.office-document-host .writer-statusbar button,
+.office-document-host .office-footer button{
+  min-width:24px!important;
+  height:24px!important;
+  border:0!important;
+  border-radius:2px!important;
+  background:transparent!important;
+  color:#fff!important;
+}
+
+.office-document-host .writer-statusbar button:hover,
+.office-document-host .office-footer button:hover{
+  background:rgba(255,255,255,.14)!important;
+}
+
+.office-document-host .writer-zoom{
+  display:flex!important;
+  align-items:center!important;
+  gap:2px!important;
+  margin-left:auto!important;
+}
+
+/* Word-like backstage overlay */
+body > .file-menu-panel,
+body > .file-menu,
+body > [class*="file-menu"]{
+  font-family:"Segoe UI",SegoeUI,Arial,sans-serif!important;
+}
+
+body > .file-menu-panel{
+  position:fixed!important;
+  inset:0!important;
+  z-index:9999!important;
+  background:#fff!important;
+  color:#222!important;
+}
+
+body > .file-menu-panel .file-menu-sidebar{
+  width:240px!important;
+  background:#f3f2f1!important;
+}
+
+body > .file-menu-panel button{
+  border-radius:2px!important;
+}
+
+/* General Office controls */
+.office-document-host input,
+.office-document-host select,
+.office-document-host textarea{
+  accent-color:var(--ms-blue);
+}
+
+.office-document-host ::selection{
+  background:#b4d5fe;
+}
+
+/* Keep old hidden helper nodes out of the grid. */
+.office-document-host > .writer-app > [hidden]{
+  display:none!important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive fallback                                                 */
+/* ------------------------------------------------------------------ */
+
+@media (max-width:1200px){
+  .office-app-shell{
+    min-width:760px;
+  }
+
+  .office-document-host .writer-font-group{
+    min-width:250px!important;
+  }
+
+  .office-document-host .writer-page{
+    width:760px!important;
+  }
+}
+
+@media (max-width:900px){
+  .office-app-shell{
+    min-width:0;
+  }
+
+  .office-document-host .writer-ribbon{
+    overflow-x:auto!important;
+  }
+
+  .office-document-host .writer-page{
+    width:720px!important;
+  }
+}
