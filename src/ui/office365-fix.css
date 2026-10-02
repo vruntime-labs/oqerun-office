@@ -1,0 +1,37 @@
+
+/* Oqerun Office — Writer grid correction
+   The live Writer DOM uses writer-* grid area names. */
+.office-document-host .writer-app{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:42px 36px 108px 28px minmax(0,1fr) 26px!important;
+  grid-template-areas:
+    "writer-title"
+    "writer-menu"
+    "writer-ribbon"
+    "writer-ruler"
+    "writer-canvas"
+    "writer-status"!important;
+}
+
+.office-document-host .writer-topbar{
+  grid-area:writer-title!important;
+}
+.office-document-host .writer-menu-row{
+  grid-area:writer-menu!important;
+}
+.office-document-host .writer-ribbon{
+  grid-area:writer-ribbon!important;
+}
+.office-document-host .writer-ruler{
+  grid-area:writer-ruler!important;
+}
+.office-document-host .writer-canvas{
+  grid-area:writer-canvas!important;
+}
+.office-document-host .writer-statusbar{
+  grid-area:writer-status!important;
+}
+
+.office-document-host > .writer-app > [hidden]{
+  display:none!important;
+}
