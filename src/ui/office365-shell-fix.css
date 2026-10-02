@@ -1,0 +1,11 @@
+
+/* Final shell geometry: document tabs live inside the global title bar,
+   so the editor host must occupy the entire row beneath it. */
+.office-app-shell{
+  grid-template-rows:46px minmax(0,1fr)!important;
+}
+
+.office-app-shell > .office-document-host{
+  min-height:0!important;
+  height:100%!important;
+}
