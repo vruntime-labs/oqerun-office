@@ -75,7 +75,7 @@ export function sanitizeWriterHtml(input: string): string {
         if (cleaned) element.setAttribute("style", cleaned);
         else element.removeAttribute("style");
       } else if (name === "class") {
-        if (element.tagName === "SPAN" && value.split(/\s+/).includes("writer-equation")) {
+        if (["SPAN", "DIV"].includes(element.tagName) && value.split(/\s+/).includes("writer-equation")) {
           element.setAttribute("class", "writer-equation");
         } else {
           element.removeAttribute("class");
