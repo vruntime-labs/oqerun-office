@@ -15,6 +15,7 @@ import {
 } from "docx";
 import pptxgen from "pptxgenjs";
 import { parse as parsePptx } from "pptxtojson";
+import { sanitizeWriterHtml } from "./sanitizeWriterHtml";
 import type {
   PresentationContent,
   PresentationSlide,
@@ -23,6 +24,17 @@ import type {
   SpreadsheetContent,
   WriterContent,
 } from "./DocumentModel";
+
+const MAX_IMPORT_BYTES = 25 * 1024 * 1024;
+const MAX_SHEET_CELLS = 100_000;
+const MAX_PRESENTATION_SLIDES = 500;
+const MAX_PRESENTATION_ELEMENTS = 10_000;
+
+function assertImportSize(file: File): void {
+  if (file.size > MAX_IMPORT_BYTES) {
+    throw new Error("This file exceeds the 25 MB import limit. Please use a smaller file.");
+  }
+}
 
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
@@ -131,8 +143,9 @@ export async function exportWriterDocx(content: WriterContent, fileName: string)
 }
 
 export async function importWriterDocx(file: File): Promise<{ html: string; plainText: string }> {
+  assertImportSize(file);
   const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
-  const html = result.value || "<p></p>";
+  const html = sanitizeWriterHtml(result.value || "<p></p>");
   const parsed = new DOMParser().parseFromString(html, "text/html");
   return { html, plainText: parsed.body.innerText };
 }
@@ -184,13 +197,20 @@ function cellFromSheet(sheet: Record<string, unknown>, address: string): Spreads
 }
 
 export async function importSheets(file: File): Promise<SpreadsheetContent> {
-  const workbook = XLSX.read(await file.arrayBuffer(), { cellFormula: true });
+  assertImportSize(file);
+  const workbook = XLSX.read(await file.arrayBuffer(), { cellFormula: true, bookSheets: false, WTF: true });
+  if (workbook.SheetNames.length > 200) throw new Error("This workbook contains too many sheets (maximum 200).");
   const sheets = workbook.SheetNames.map((name) => {
     const source = workbook.Sheets[name] as Record<string, unknown>;
     const cells: Record<string, SpreadsheetCell> = {};
     const range = source["!ref"] as string | undefined;
     if (range) {
       const decoded = XLSX.utils.decode_range(range);
+      const rowCount = decoded.e.r - decoded.s.r + 1;
+      const columnCount = decoded.e.c - decoded.s.c + 1;
+      if (rowCount < 1 || columnCount < 1 || rowCount * columnCount > MAX_SHEET_CELLS) {
+        throw new Error("A worksheet exceeds the 100,000-cell import safety limit.");
+      }
       for (let row = decoded.s.r; row <= decoded.e.r; row += 1) {
         for (let col = decoded.s.c; col <= decoded.e.c; col += 1) {
           const address = XLSX.utils.encode_cell({ r: row, c: col });
@@ -290,11 +310,19 @@ export function importSlidesJson(content: PresentationContent): PresentationCont
 }
 
 export async function importSlidesPptx(file: File): Promise<PresentationContent> {
+  assertImportSize(file);
   const parsed = await parsePptx(await file.arrayBuffer(), {
     imageMode: "base64",
     videoMode: "none",
     audioMode: "none",
   });
+  if ((parsed.slides?.length ?? 0) > MAX_PRESENTATION_SLIDES) {
+    throw new Error("This presentation exceeds the 500-slide import safety limit.");
+  }
+  const totalElements = (parsed.slides ?? []).reduce((sum: number, slide: any) => sum + (Array.isArray(slide.elements) ? slide.elements.length : 0), 0);
+  if (totalElements > MAX_PRESENTATION_ELEMENTS) {
+    throw new Error("This presentation exceeds the 10,000-element import safety limit.");
+  }
   const width = Number(parsed.size?.width) || 960;
   const height = Number(parsed.size?.height) || 540;
   const htmlToText = (value: string): string => {
