@@ -130,7 +130,7 @@ export class Office {
             </div>
           </section>
         </section>
-        <footer class="office-footer"><span>Open source · MIT License</span><span>VRuntime Labs · Oqerun Office</span></footer>
+        <footer class="office-footer"><span>Open source · MIT License</span><span>VRuntime Labs · Oqerun Office</span><span class="office-legal-links"><a href="./privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a><a href="./terms.html" target="_blank" rel="noopener noreferrer">Terms</a></span></footer>
       </main>`;
 
     host.querySelectorAll<HTMLButtonElement>("[data-module]").forEach((button) =>

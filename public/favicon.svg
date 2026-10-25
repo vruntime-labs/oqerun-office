@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Oqerun Office</title>
+  <rect width="64" height="64" fill="#07101f"/>
+  <rect x="14" y="8" width="36" height="48" rx="4" fill="#f1f5f9"/>
+  <path d="M39 8v13h11" fill="#cbd5e1"/>
+  <path d="M39 8l11 13h-7a4 4 0 0 1-4-4z" fill="#94a3b8"/>
+  <path d="M22 29h20M22 36h20M22 43h14" fill="none" stroke="#0b6b83" stroke-width="3" stroke-linecap="square"/>
+  <rect x="7" y="7" width="7" height="50" fill="#00d4ff"/>
+</svg>
