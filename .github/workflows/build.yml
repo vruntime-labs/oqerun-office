@@ -21,5 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Run import security tests
+        run: npm test
+
       - name: TypeScript and Vite build
         run: npm run build
