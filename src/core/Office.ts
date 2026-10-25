@@ -110,8 +110,8 @@ export class Office {
           <div class="office-home-hero">
             <div>
               <p class="eyebrow">VRuntime Labs</p>
-              <h1>Everything you need to create.</h1>
-              <p>Documents, spreadsheets and presentations in one focused workspace — designed for Oqerun OS and built in the open.</p>
+              <h1>Create documents, spreadsheets, and presentations.</h1>
+              <p>Write documents, work with spreadsheets, and build presentations in one browser-based workspace.</p>
             </div>
             <div class="office-home-orbit" aria-hidden="true"><span>W</span><span>S</span><span>P</span></div>
           </div>
