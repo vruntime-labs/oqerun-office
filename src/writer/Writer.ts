@@ -2,6 +2,7 @@ import type { OfficeDocument, WriterBlock, WriterContent, WriterSettings } from 
 import { DocumentStore } from "../core/DocumentStore";
 import { exportWriterDocx, importWriterDocx, downloadText } from "../core/FormatEngine";
 import { FileMenu } from "../ui/FileMenu";
+import { sanitizeWriterHtml } from "../core/sanitizeWriterHtml";
 
 const DEFAULT_SETTINGS: WriterSettings = {
   fontFamily: "Georgia",
@@ -195,7 +196,7 @@ export class Writer {
       return this.openPath(path);
     }
 
-    editor.innerHTML = document.content.html || EMPTY_HTML;
+    editor.innerHTML = sanitizeWriterHtml(document.content.html || EMPTY_HTML);
     this.applySettings();
     this.updateFileName();
     this.setStatus("Opened");
@@ -355,7 +356,7 @@ export class Writer {
         if (!editor) this.render();
         const target = this.editor();
         if (!target) return;
-        target.innerHTML = imported.html;
+        target.innerHTML = sanitizeWriterHtml(imported.html);
         this.applySettings();
         this.setStatus("Imported DOCX");
         await this.save(target);
@@ -369,6 +370,7 @@ export class Writer {
       try {
         const parsed = JSON.parse(await file.text()) as OfficeDocument<WriterContent>;
         if (!parsed?.content?.html || !parsed.metadata) throw new Error("Invalid Oqerun document");
+        parsed.content.html = sanitizeWriterHtml(parsed.content.html);
         const path = await this.store.save({
           ...parsed,
           metadata: { ...parsed.metadata, path: `/home/user/Documents/${this.slug(parsed.metadata.name)}.oqdoc` },
@@ -392,7 +394,7 @@ export class Writer {
       if (!editor) this.render();
       const target = this.editor();
       if (!target) return;
-      target.innerHTML = isHtml ? text : "<p>" + this.escape(text).replace(/\r?\n/g, "</p><p>") + "</p>";
+      target.innerHTML = isHtml ? sanitizeWriterHtml(text) : "<p>" + this.escape(text).replace(/\r?\n/g, "</p><p>") + "</p>";
       this.applySettings();
       this.setStatus("Imported text");
       await this.save(target);
@@ -524,7 +526,10 @@ export class Writer {
     });
 
     const draft = localStorage.getItem("oqerun-writer-draft");
-    if (draft && this.fileName === "Untitled document") editor.innerHTML = draft;
+    if (draft && this.fileName === "Untitled document") {
+      try { editor.innerHTML = sanitizeWriterHtml(draft); }
+      catch { localStorage.removeItem("oqerun-writer-draft"); }
+    }
 
     this.root.querySelector('[data-action="back"]')?.addEventListener("click", () =>
       this.root.dispatchEvent(new CustomEvent("office:navigate", { detail: "home", bubbles: true })),
@@ -660,6 +665,7 @@ export class Writer {
   }
 
   private async save(editor: HTMLElement): Promise<void> {
+    editor.innerHTML = sanitizeWriterHtml(editor.innerHTML);
     await this.store.save(this.currentDocument(editor));
     localStorage.setItem("oqerun-writer-draft", editor.innerHTML);
     this.updateFileName();
