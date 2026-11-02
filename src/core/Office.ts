@@ -33,6 +33,13 @@ export class Office {
     const root = this.root;
     if (!root) throw new Error("Oqerun Office root element was not found.");
 
+    const route = window.location.pathname.match(/\/(docs|sheets|slides)(?:\/|$)/)?.[1];
+    if (route) {
+      const module: OfficeModule = route === "docs" ? "writer" : route === "sheets" ? "sheets" : "slides";
+      this.startEditorPage(module);
+      return;
+    }
+
     root.innerHTML = `
       <main class="office-app-shell">
         <header class="office-global-bar">
@@ -75,9 +82,42 @@ export class Office {
     this.renderHome();
   }
 
+  private startEditorPage(module: OfficeModule): void {
+    const root = this.root;
+    if (!root) return;
+
+    const title = module === "writer" ? "Writer" : module === "sheets" ? "Sheets" : "Slides";
+    root.innerHTML = `
+      <main class="office-app-shell office-standalone-shell">
+        <header class="office-global-bar office-standalone-bar">
+          <a class="office-global-brand" href="../" aria-label="Back to Oqerun Office home">
+            <span class="office-global-logo">◈</span>
+            <span><strong>Oqerun Office</strong><small>VRuntime Labs</small></span>
+          </a>
+          <div class="office-global-tabs"><span class="office-home-tab is-active">${title}</span></div>
+          <div class="office-global-actions">
+            <a class="office-global-open" href="../">All apps</a>
+          </div>
+        </header>
+        <section class="office-standalone-editor" data-standalone-editor></section>
+      </main>`;
+
+    const host = root.querySelector<HTMLElement>("[data-standalone-editor]");
+    if (!host) return;
+    const instance = module === "writer" ? new Writer(host) : module === "sheets" ? new Sheets(host) : new Slides(host);
+    instance.render();
+    const id = crypto.randomUUID();
+    this.tabs.set(id, { id, module, name: `Untitled ${module === "writer" ? "document" : module === "sheets" ? "spreadsheet" : "presentation"}`, host, instance });
+    this.activeTabId = id;
+    root.addEventListener("office:navigate", this.handleNavigation);
+  }
+
   private handleNavigation = (event: Event): void => {
     const detail = (event as CustomEvent<string>).detail;
-    if (detail === "home") this.showHome();
+    if (detail === "home") {
+      if (this.homeHost) this.showHome();
+      else window.location.assign("../");
+    }
   };
 
   private showHome(): void {
@@ -132,10 +172,6 @@ export class Office {
         </section>
         <footer class="office-footer"><span>Open source · MIT License</span><span>VRuntime Labs · Oqerun Office</span><span class="office-legal-links"><a href="./privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a><a href="./terms.html" target="_blank" rel="noopener noreferrer">Terms</a></span></footer>
       </main>`;
-
-    host.querySelectorAll<HTMLButtonElement>("[data-module]").forEach((button) =>
-      button.addEventListener("click", () => this.openModule(button.dataset.module as OfficeModule)),
-    );
 
     host.querySelectorAll<HTMLButtonElement>("[data-recent-path]").forEach((button) =>
       button.addEventListener("click", () => {
@@ -336,11 +372,12 @@ export class Office {
   }
 
   private moduleCard(module: OfficeModule, title: string, description: string, glyph: string): string {
-    return `<button class="module-card" data-module="${module}" type="button">
+    const route = module === "writer" ? "docs" : module;
+    return `<a class="module-card" href="./${route}/">
       <span class="module-icon">${glyph}</span>
       <span class="module-content"><strong>Oqerun ${title}</strong><span>${description}</span></span>
       <span class="module-arrow">→</span>
-    </button>`;
+    </a>`;
   }
 
   private recentCard(item: RecentDocument): string {
