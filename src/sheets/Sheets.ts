@@ -2,6 +2,7 @@ import type { OfficeDocument, SpreadsheetCell, SpreadsheetContent, SpreadsheetFo
 import { DocumentStore } from "../core/DocumentStore";
 import { exportSheets, importSheets, downloadText } from "../core/FormatEngine";
 import { FileMenu } from "../ui/FileMenu";
+import { parseAddress, formatAddress, columnLabel, parseRange } from "./engine/cell-address";
 
 type SheetState = SpreadsheetContent["sheets"][number];
 
@@ -395,13 +396,17 @@ export class Sheets {
   private valuesFromArgs(args: string[], stack: Set<string>): SpreadsheetCell[] {
     const values: SpreadsheetCell[] = [];
     for (const arg of args) {
-      const range = arg.trim().match(/^([A-Z]+\d+):([A-Z]+\d+)$/i);
-      if (range) {
-        const start = this.refToCoord(range[1]); const end = this.refToCoord(range[2]);
-        for (let row = start.row; row <= end.row; row += 1) {
-          for (let col = start.col; col <= end.col; col += 1) values.push(this.evaluateCell(this.cellRef(row, col), stack));
-        }
-      } else values.push(this.evaluateToken(arg, stack));
+      const candidate = arg.trim();
+      if (/^\$?[A-Z]+\$?[1-9][0-9]*(?::\$?[A-Z]+\$?[1-9][0-9]*)?$/i.test(candidate)) {
+        try {
+          const bounds = parseRange(candidate.toUpperCase());
+          for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+            for (let col = bounds.startColumn; col <= bounds.endColumn; col += 1) values.push(this.evaluateCell(this.cellRef(row, col), stack));
+          }
+          continue;
+        } catch { /* Fall through and evaluate it as a normal formula token. */ }
+      }
+      values.push(this.evaluateToken(arg, stack));
     }
     return values;
   }
@@ -584,22 +589,13 @@ export class Sheets {
   }
 
   private refToCoord(ref: string): { row: number; col: number } {
-    const match = ref.toUpperCase().match(/^([A-Z]+)(\d+)$/);
-    if (!match) return { row: 0, col: 0 };
-    let col = 0;
-    for (const char of match[1]) col = col * 26 + char.charCodeAt(0) - 64;
-    return { row: Number(match[2]) - 1, col: col - 1 };
+    try { const coordinates = parseAddress(ref.toUpperCase()); return { row: coordinates.row, col: coordinates.column }; }
+    catch { return { row: 0, col: 0 }; }
   }
 
-  private cellRef(row: number, col: number): string {
-    return `${this.columnName(col)}${row + 1}`;
-  }
+  private cellRef(row: number, col: number): string { return formatAddress(row, col); }
 
-  private columnName(index: number): string {
-    let n = index + 1; let result = "";
-    while (n > 0) { const rem = (n - 1) % 26; result = String.fromCharCode(65 + rem) + result; n = Math.floor((n - 1) / 26); }
-    return result;
-  }
+  private columnName(index: number): string { return columnLabel(index); }
 
   private updateFileName(): void {
     const name = this.root.querySelector<HTMLElement>("[data-file-name]");
